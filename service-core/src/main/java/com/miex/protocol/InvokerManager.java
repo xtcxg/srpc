@@ -2,6 +2,8 @@ package com.miex.protocol;
 
 import com.miex.cache.CacheManager;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InvokerManager {
@@ -27,8 +29,24 @@ public class InvokerManager {
         }
     }
 
-    public void createAll() {
+    public Map<String,Object> getAll() {
+        return INVOKER_MAP;
+    }
 
+    public void createAll() {
+        List<String> classList = CacheManager.APPLY_CACHE.getClassList();
+        for (String className : classList) {
+            create(className);
+        }
+    }
+
+    private void create(String className) {
+        try {
+            Class<?> c = Class.forName(className);
+            create(c);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public <T> T create(Class<T> type) {

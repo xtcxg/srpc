@@ -76,6 +76,22 @@ public class ExporterManager {
         return null;
     }
 
+    public <T> Exporter<T> createExporter(String exportName,T target) {
+        Exporter<T> exporter;
+        Class<T> type = (Class<T>) target.getClass().getInterfaces()[0];
+        exporter =  PROVIDE_CACHE.get(type.getName());
+        if (null != exporter) {
+            return exporter;
+        }
+        exporter = ExporterFactory.createExporterByProtocol(exportName, type, target);
+        PROVIDE_CACHE.put(type.getName(), exporter);
+        return exporter;
+    }
+
+    public Map<String,String> getClassCache() {
+        return PROVIDE_CACHE.getClassMap();
+    }
+
     static class ExporterFactory {
         private static final String PROTOCOL = CacheManager.PROTOCOL;
         public static <T> Exporter<T> createExporterByProtocol(String name, Class<T> type, T target) {
@@ -85,4 +101,6 @@ public class ExporterManager {
             }
         }
     }
+
+
 }

@@ -19,8 +19,6 @@ public class CacheManager {
         REGISTER_TYPE = PROPERTIES_CACHE.get("srpc.registry.type");
         Assert.EmptyString(PROPERTIES_CACHE.get("srpc.protocol"),"property [srpc.protocol] not found");
         PROTOCOL = PROPERTIES_CACHE.get("srpc.protocol");
-
-        Assert.EmptyString(PROPERTIES_CACHE.get("srpc.registry.host"),"property [srpc.registry.host] not found");
     }
 
 }

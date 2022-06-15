@@ -6,6 +6,7 @@ import com.miex.cache.ApplyCache;
 import com.miex.cache.CacheManager;
 import com.miex.cache.PropertiesCache;
 import com.miex.cache.ProvideCache;
+import com.miex.exception.SrpcException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -13,10 +14,7 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReader;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,14 +30,12 @@ public class Scanner {
     public static void scan() {
         String providePath = PROPERTIES_CACHE.get("srpc.scan.provide");
         String applyPath = PROPERTIES_CACHE.get("srpc.scan.apply");
-        if (StringUtil.isEmpty(providePath)) {
+        if (StringUtil.isEmpty(providePath) || "[]".equals(providePath)) {
             providePath = PROPERTIES_CACHE.get("srpc.scan");
         }
-        Assert.EmptyString(providePath);
-        if (StringUtil.isEmpty(applyPath)) {
+        if (StringUtil.isEmpty(applyPath) || "[]".equals(applyPath)) {
             applyPath = PROPERTIES_CACHE.get("srpc.scan");
         }
-        Assert.EmptyString(applyPath);
 
         if (providePath.equals(applyPath)) {
             scanAll(providePath);
@@ -117,13 +113,10 @@ public class Scanner {
      * @return
      */
     private static List<String> resolveBasePackage(String path) {
-        List<String> paths = new ArrayList<>();
-        if (path.startsWith("{")) {
-            paths = Arrays.asList(path.substring(1,path.length()-1).split(","));
-        } else {
-            paths.add(path);
+        List<String> paths = CollectionUtil.toList(path);
+        if (CollectionUtil.isEmpty(paths)) {
+            throw new SrpcException(SrpcException.Enum.PARAM_ERROR);
         }
-
         return paths.stream().map( p -> {
             p = p.replace(".", "/");
             return ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + p + '/' + DEFAULT_RESOURCE_PATTERN;

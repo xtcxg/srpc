@@ -31,7 +31,7 @@ public class ApplicationConfig {
 
         this.invokerManager = InvokerManager.getInstance();
 
-        this.server = ExchangeManager.createService();
+        this.server = ExchangeManager.createServer();
 
         this.registry = RegistryManager.createRegistry();
 

@@ -242,6 +242,7 @@ public class RedisRegistry implements Registry {
             long time = Long.parseLong(KEEP_TIME);
             while (ALIVE) {
                 try {
+                    System.out.println("host heart beat:" + address);
                     jedisPool.getResource().setex(address, time, LOCAL_SERVICE.toString());
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {

@@ -16,7 +16,18 @@ public class ExchangeManager {
     private static final Registry REGISTRY = RegistryManager.createRegistry();
     private static final String PROTOCOL = CacheManager.PROPERTIES_CACHE.get("srpc.protocol");
 
-    public static Server createService() {
+    private static class SingletonHolder {
+        private static final ExchangeManager INSTANCE = new ExchangeManager();
+    }
+
+    private ExchangeManager() {}
+
+    public static ExchangeManager getInstance() {
+        return ExchangeManager.SingletonHolder.INSTANCE;
+    }
+
+
+    public static Server createServer() {
 
         return HttpServer.getInstance();
     }

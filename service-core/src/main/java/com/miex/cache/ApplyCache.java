@@ -17,6 +17,10 @@ public class ApplyCache implements Cache<String,Object> {
         CLASS_LIST.add(className);
     }
 
+    public List<String> getClassList() {
+        return CLASS_LIST;
+    }
+
     @Override
     public void put(String key, Object value) {
         CACHE.put(key, value);
