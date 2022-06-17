@@ -30,7 +30,7 @@ public class ServiceTest {
 
     @Test
     public void requestTest() throws IOException {
-        HttpServer httpServer = HttpServer.getInstance();
+        HttpServer httpServer = new HttpServer();
         httpServer.start();
         after();
     }

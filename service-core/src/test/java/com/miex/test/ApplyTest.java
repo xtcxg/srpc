@@ -1,7 +1,7 @@
 package com.miex.test;
 
 import com.miex.config.ApplicationConfig;
-import com.miex.protocol.InvokerManager;
+import com.miex.protocol.ProtocolManager;
 import com.miex.provide.api.ProductService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,7 @@ public class ApplyTest {
     @BeforeAll
     public static void before() {
         Properties properties = new Properties();
-        properties.setProperty("srpc.port","3696");
+        properties.setProperty("srpc.server.port","3696");
 
         properties.setProperty("srpc.scan","com.miex.apply");
 
@@ -27,9 +27,9 @@ public class ApplyTest {
 
     @Test
     public void create() {
-        InvokerManager invokerManager = config.getInvokerManager();
-        ProductService productService = invokerManager.get(ProductService.class);
-        String name = productService.getName(1L);
+        ProtocolManager protocolManager = config.getProtocolManager();
+        ProductService productService = protocolManager.getApply(ProductService.class);
+        String name = productService.getName(2L);
         System.out.println(name);
     }
 }

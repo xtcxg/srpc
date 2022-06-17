@@ -1,23 +1,15 @@
 package com.miex.test;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
-import com.miex.cache.CacheManager;
-import com.miex.registry.Registry;
 import com.miex.registry.redis.RedisRegistry;
-import com.miex.registry.redis.RegistryManager;
-import com.miex.util.CollectionUtil;
-import org.checkerframework.checker.units.qual.A;
+import com.miex.registry.RegistryManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.params.SetParams;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class RegistryTest {
     static String ip;
@@ -25,9 +17,8 @@ public class RegistryTest {
 
     @BeforeAll
     private static void before() throws UnknownHostException {
-        CacheManager.PROPERTIES_CACHE.put("srpc.registry.host","127.0.0.1");
-        CacheManager.PROPERTIES_CACHE.put("srpc.registry.port","6379");
-        registry = (RedisRegistry) RegistryManager.createRegistry();
+
+        registry = (RedisRegistry) RegistryManager.getRegistry();
         ip = Inet4Address.getLocalHost().getHostAddress();
 
     }
@@ -69,9 +60,8 @@ public class RegistryTest {
     }
 
     public static void main(String[] args) {
-        CacheManager.PROPERTIES_CACHE.put("srpc.registry.host","127.0.0.1");
-        CacheManager.PROPERTIES_CACHE.put("srpc.registry.port","6379");
-        RedisRegistry registry = (RedisRegistry) RegistryManager.createRegistry();
+
+        RedisRegistry registry = (RedisRegistry) RegistryManager.getRegistry();
         registry.register();
         registry.destroy();
     }

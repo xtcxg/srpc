@@ -39,7 +39,10 @@ public class SrpcException extends RuntimeException{
 		PARAM_ERROR(30001,"param verification failed"),
 
 		//
+		EXPORTER_ERROR(40001,"exporter error"),
+		INVOKER_ERROR(40002,"invoker error"),
 		RESOURCE_NOT_FOUND(40004, "resource not found"),
+
 
 		SYSTEM_ERROR(50001,"system error"),
 		SERIALIZABLE_ERROR(50002,"serializable error"),

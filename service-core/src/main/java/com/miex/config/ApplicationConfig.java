@@ -1,14 +1,11 @@
 package com.miex.config;
 
-import com.miex.cache.ProvideCache;
-import com.miex.cache.CacheManager;
 import com.miex.cache.PropertiesCache;
 import com.miex.exchange.ExchangeManager;
 import com.miex.exchange.Server;
-import com.miex.protocol.ExporterManager;
-import com.miex.protocol.InvokerManager;
+import com.miex.protocol.ProtocolManager;
 import com.miex.registry.Registry;
-import com.miex.registry.redis.RegistryManager;
+import com.miex.registry.RegistryManager;
 import com.miex.util.Scanner;
 
 import java.util.Enumeration;
@@ -16,24 +13,20 @@ import java.util.Properties;
 
 public class ApplicationConfig {
 
-    private final PropertiesCache PROPERTIES_CACHE = CacheManager.PROPERTIES_CACHE;
-    private final ProvideCache PROVIDE_CACHE = CacheManager.PROVIDE_CACHE;
+    private final PropertiesCache PROPERTIES_CACHE = PropertiesCache.getInstance();
 
-    private Registry registry;
-    private final ExporterManager exporterManager;
-    private final InvokerManager invokerManager;
+    private final Registry registry;
     private final Server server;
+    private final ProtocolManager protocolManager;
 
     public ApplicationConfig(Properties properties) {
         setProperties(properties);
 
-        this.exporterManager = ExporterManager.getInstance();
+        this.protocolManager = ProtocolManager.getInstance();
 
-        this.invokerManager = InvokerManager.getInstance();
+        this.server = ExchangeManager.getServer();
 
-        this.server = ExchangeManager.createServer();
-
-        this.registry = RegistryManager.createRegistry();
+        this.registry = RegistryManager.getRegistry();
 
         init();
     }
@@ -45,8 +38,7 @@ public class ApplicationConfig {
             key = enumeration.nextElement().toString();
             PROPERTIES_CACHE.put(key,properties.getProperty(key));
         }
-        CacheManager.checkProperties();
-
+        PropertiesCache.checkProperties();
     }
 
     public void init() {
@@ -54,24 +46,16 @@ public class ApplicationConfig {
         Scanner.scan();
 
         // 创建本地服务
-        this.exporterManager.createAll();
+        this.protocolManager.createAllExporter();
 
         // 开启服务器
         this.server.start();
 
         // 注册服务
         this.registry.register();
-
-        // 创建引入的服务
-        this.invokerManager.createAll();
-
     }
 
-    public Object getService(String name) {
-        return PROVIDE_CACHE.get(name);
-    }
-
-    public InvokerManager getInvokerManager() {
-        return this.invokerManager;
+    public ProtocolManager getProtocolManager() {
+        return this.protocolManager;
     }
 }

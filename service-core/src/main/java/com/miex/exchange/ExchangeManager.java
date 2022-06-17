@@ -1,66 +1,69 @@
 package com.miex.exchange;
 
-import com.miex.cache.CacheManager;
-import com.miex.exchange.http.HttpClient;
-import com.miex.exchange.http.HttpServer;
-import com.miex.registry.Registry;
-import com.miex.registry.redis.RegistryManager;
+import com.miex.cache.PropertiesCache;
+import com.miex.config.ServerConfig;
+import com.miex.exception.SrpcException;
+import com.miex.registry.RegistryManager;
+import com.miex.util.ClassUtil;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ExchangeManager {
 
-    private static final Registry REGISTRY = RegistryManager.createRegistry();
-    private static final String PROTOCOL = CacheManager.PROPERTIES_CACHE.get("srpc.protocol");
+    private static final ServerConfig SERVER_CONFIG;
+    private static final String PREFIX = "srpc.server.";
+    private static String PROTOCOL;
+    private static Server server;
+    private static final Map<String,List<Client>> SERVICE_MAP = new ConcurrentHashMap<>();
 
-    private static class SingletonHolder {
-        private static final ExchangeManager INSTANCE = new ExchangeManager();
+    static {
+        SERVER_CONFIG = ClassUtil.buildFromProperties(PREFIX,ServerConfig.class, PropertiesCache.getInstance().getProperties());
+        PROTOCOL = SERVER_CONFIG.getProtocol();
     }
 
-    private ExchangeManager() {}
-
-    public static ExchangeManager getInstance() {
-        return ExchangeManager.SingletonHolder.INSTANCE;
+    public static ServerConfig getServerConfig() {
+        return SERVER_CONFIG;
     }
 
+    public static synchronized Server getServer() {
+        if (null == server) {
+            server = buildServer();
+        }
+        return server;
+    }
 
-    public static Server createServer() {
-
-        return HttpServer.getInstance();
+    private static Server buildServer() {
+        String className = PropertiesCache.getInstance().get("srpc.mapping.server." + PROTOCOL);
+        return ClassUtil.createObject(className);
     }
 
     public static List<Client> getClients(String className) {
-        List<String> hosts = REGISTRY.getHosts(className);
-        List<Client> clients = new ArrayList<>();
-        for (String host : hosts) {
-            clients.add(createClient(host));
+        List<Client> clients = SERVICE_MAP.get(className);
+        if (null == clients) {
+            clients = new ArrayList<>();
         }
+        List<String> hosts = RegistryManager.getRegistry().getHosts(className);
+        for (String host : hosts) {
+            clients.add(buildClient(host));
+        }
+        SERVICE_MAP.put(className,clients);
         return clients;
     }
 
-    private static Client createClient(String host) {
-        switch (PROTOCOL) {
-            case "http":
-                return buildHttpClient(host);
-            default:
-                return buildHttpClient(host);
-        }
-    }
-
-    private static Client buildHttpClient(String host) {
-        Client client = null;
+    private static Client buildClient(String host) {
+        String className = PropertiesCache.getInstance().get("srpc.mapping.client." + PROTOCOL);
+        String[] arr = host.split(":");
         try {
-            String[] arr = host.split(":");
             URI uri = new URI("http",null,arr[0],Integer.parseInt(arr[1]),"/",null,null);
-            client = new HttpClient(uri);
+            return ClassUtil.createObject(className,new Class[]{URI.class},new Object[]{uri});
         } catch (URISyntaxException e) {
             e.printStackTrace();
+            throw new SrpcException(SrpcException.Enum.SYSTEM_ERROR,"build uri error,host [" + host + "]");
         }
-        return client;
     }
-
-
 }

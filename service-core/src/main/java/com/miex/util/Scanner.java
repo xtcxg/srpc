@@ -2,11 +2,9 @@ package com.miex.util;
 
 import com.miex.annotation.Apply;
 import com.miex.annotation.Provide;
-import com.miex.cache.ApplyCache;
-import com.miex.cache.CacheManager;
 import com.miex.cache.PropertiesCache;
-import com.miex.cache.ProvideCache;
 import com.miex.exception.SrpcException;
+import com.miex.protocol.ProtocolManager;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -23,9 +21,8 @@ public class Scanner {
     static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
     private static final PathMatchingResourcePatternResolver RESOURCE_PATTERN_RESOLVER = new PathMatchingResourcePatternResolver();
 
-    private static PropertiesCache PROPERTIES_CACHE = CacheManager.PROPERTIES_CACHE;
-    private static ApplyCache APPLY_CACHE = CacheManager.APPLY_CACHE;
-    private static ProvideCache PROVIDE_CACHE = CacheManager.PROVIDE_CACHE;
+    private static final ProtocolManager PROTOCOL_MANAGER = ProtocolManager.getInstance();
+    private static final PropertiesCache PROPERTIES_CACHE = PropertiesCache.getInstance();
 
     public static void scan() {
         String providePath = PROPERTIES_CACHE.get("srpc.scan.provide");
@@ -145,7 +142,7 @@ public class Scanner {
             }
             name = StringUtil.lowerFirstCase(name);
         }
-        PROVIDE_CACHE.addClass(name, c.getName());
+        PROTOCOL_MANAGER.addProviderClass(name, c.getName());
         return name;
     }
 
@@ -157,11 +154,16 @@ public class Scanner {
         if (c.isInterface()) {
             return;
         }
+        boolean mark = false;
         Field[] fields = c.getDeclaredFields();
         for (Field field : fields) {
             if (field.getAnnotation(Apply.class) != null) {
-                APPLY_CACHE.addClass(field.getType().getName());
+                PROTOCOL_MANAGER.addApply(field.getType().getName());
+                mark = true;
             }
+        }
+        if (mark) {
+            PROTOCOL_MANAGER.addApplyCache(c.getName());
         }
     }
 }

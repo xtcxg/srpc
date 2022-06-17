@@ -1,9 +1,6 @@
 package com.miex.test;
 
 import com.miex.annotation.EnableSrpc;
-import com.miex.config.ApplicationConfig;
-import com.miex.protocol.InvokerManager;
-import com.miex.test.provide.api.ShopService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;

@@ -39,9 +39,9 @@ public class PropertyTest {
         return prop;
     }
 
-    public static void main(String[] args) throws NoSuchMethodException {
+    public static void main(String[] args) {
         Properties properties = new Properties();
-        properties.setProperty("srpc.port","3695");
+        properties.setProperty("srpc.server.port","3695");
 
         properties.setProperty("srpc.scan.provide","com.miex.provider.service");
         properties.setProperty("srpc.scan.apply","com.miex.consumer");

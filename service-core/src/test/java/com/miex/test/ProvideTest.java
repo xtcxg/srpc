@@ -1,13 +1,13 @@
 package com.miex.test;
 
 import com.miex.config.ApplicationConfig;
-import com.miex.protocol.InvokerManager;
+import com.miex.protocol.Exporter;
+import com.miex.protocol.ProtocolManager;
+import com.miex.provide.api.ProductService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
-import java.net.URISyntaxException;
 import java.util.Properties;
 
 public class ProvideTest {
@@ -17,7 +17,7 @@ public class ProvideTest {
     @BeforeAll
     public static void before() {
         Properties properties = new Properties();
-        properties.setProperty("srpc.port","3695");
+        properties.setProperty("srpc.server.port","3695");
 
         properties.setProperty("srpc.scan.provide","com.miex.provide");
         properties.setProperty("srpc.scan.apply","com.miex.provide");
@@ -29,8 +29,11 @@ public class ProvideTest {
     }
 
     @Test
-    public void providerTest() throws InterruptedException, IOException, URISyntaxException, ClassNotFoundException {
-        InvokerManager invokerManager = config.getInvokerManager();
+    public void providerTest() {
+        ProtocolManager protocolManager = config.getProtocolManager();
+        Exporter<ProductService> exporter = protocolManager.getExporter(ProductService.class);
+        ProductService target = exporter.getTarget();
+        System.out.println(target.getName(1L));
     }
 
     @AfterAll
