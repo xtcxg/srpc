@@ -8,6 +8,6 @@ public class DefaultInvoker<T> extends AbstractInvoker<T> {
 
     @Override
     public Result doInvoke(InvocationHandler handler) {
-        return super.getClient().send(handler);
+        return super.doInvoke(handler);
     }
 }

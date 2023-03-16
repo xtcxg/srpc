@@ -10,16 +10,17 @@ import java.util.Map;
 import java.util.Set;
 
 public class ProtocolBeanPostProcessor implements BeanPostProcessor {
-    private final Map<String, String> classCache = ProtocolManager.getInstance().getProvideClasses();
+    private final Map<String, Class<?>> classCache = ProtocolManager.getInstance().getProvideClasses();
     private final Set<String> applyCache = ProtocolManager.getInstance().getAllApplyCache();
     private final Map<String, Object> applyMap = ProtocolManager.getInstance().getAllApply();
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        String className = classCache.get(beanName);
-        if (!StringUtil.isEmpty(className)) {
-            ProtocolManager.getInstance().getExporter(beanName, bean);
+        Class<?> c = classCache.get(beanName);
+        if (null != c) {
+            // todo
+//            ProtocolManager.getInstance().getExporter(beanName, bean.getClass());
         }
-        className = bean.getClass().getName();
+        String className = bean.getClass().getName();
         if (applyCache.contains(className)) {
             setValue(bean);
         }

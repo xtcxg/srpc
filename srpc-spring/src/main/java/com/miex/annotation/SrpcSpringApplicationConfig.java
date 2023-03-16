@@ -1,7 +1,7 @@
 package com.miex.annotation;
 
 import com.miex.exchange.ExchangeManager;
-import com.miex.exchange.Server;
+import com.miex.exchange.Exchange;
 import com.miex.registry.Registry;
 import com.miex.registry.RegistryManager;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -12,12 +12,12 @@ public class SrpcSpringApplicationConfig {
 
     private ConfigurableEnvironment environment;
     private Registry registry;
-    private Server server;
+    private Exchange exchange;
 
     @PostConstruct
     public void init() {
-        this.server = ExchangeManager.getServer();
-        this.server.start();
+        this.exchange = ExchangeManager.getServer();
+        this.exchange.init();
 
         this.registry = RegistryManager.getRegistry();
         this.registry.register();

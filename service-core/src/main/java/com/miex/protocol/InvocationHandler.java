@@ -16,6 +16,16 @@ public class InvocationHandler implements Serializable {
 
     Class<?>[] parameterTypes;
 
+    Class<?> returnType;
+
+    public Class<?> getReturnType() {
+        return returnType;
+    }
+
+    public void setReturnType(Class<?> returnType) {
+        this.returnType = returnType;
+    }
+
     public InvocationHandler() {}
 
     public String getMethodName() {

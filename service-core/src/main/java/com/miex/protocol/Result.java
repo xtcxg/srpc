@@ -1,12 +1,43 @@
 package com.miex.protocol;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public class Result implements Serializable {
 
     Object value;
 
+    int code;
+
+    String msg;
+
+    Map<String, Object> extra;
+
     Throwable throwable;
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+
+    public Map<String, Object> getExtra() {
+        return extra;
+    }
+
+    public void setExtra(Map<String, Object> extra) {
+        this.extra = extra;
+    }
 
     public Result() {
 

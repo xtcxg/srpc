@@ -1,8 +1,10 @@
 package com.miex.exchange;
 
 import com.miex.cache.PropertiesCache;
-import com.miex.config.ServerConfig;
+import com.miex.config.ExchangeConfig;
 import com.miex.exception.SrpcException;
+import com.miex.protocol.InvocationHandler;
+import com.miex.protocol.Result;
 import com.miex.registry.RegistryManager;
 import com.miex.util.ClassUtil;
 
@@ -15,31 +17,40 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ExchangeManager {
 
-    private static final ServerConfig SERVER_CONFIG;
-    private static final String PREFIX = "srpc.server.";
-    private static String PROTOCOL;
-    private static Server server;
+    private static final ExchangeConfig exchangeConfig;
+    private static final String PREFIX = "srpc.exchange.";
+    private static final String PROTOCOL;
+    private static Exchange exchange;
     private static final Map<String,List<Client>> SERVICE_MAP = new ConcurrentHashMap<>();
 
     static {
-        SERVER_CONFIG = ClassUtil.buildFromProperties(PREFIX,ServerConfig.class, PropertiesCache.getInstance().getProperties());
-        PROTOCOL = SERVER_CONFIG.getProtocol();
+        exchangeConfig = ClassUtil.buildFromProperties(PREFIX,
+            ExchangeConfig.class, PropertiesCache.getInstance().getProperties());
+        PROTOCOL = exchangeConfig.getProtocol();
+        exchange = buildServer();
     }
 
-    public static ServerConfig getServerConfig() {
-        return SERVER_CONFIG;
+    public static ExchangeConfig getExchangeConfig() {
+        return exchangeConfig;
     }
 
-    public static synchronized Server getServer() {
-        if (null == server) {
-            server = buildServer();
+    public static synchronized Exchange getServer() {
+        if (null == exchange) {
+            exchange = buildServer();
         }
-        return server;
+        return exchange;
     }
 
-    private static Server buildServer() {
-        String className = PropertiesCache.getInstance().get("srpc.mapping.server." + PROTOCOL);
+    private static Exchange buildServer() {
+        String className = PropertiesCache.getInstance().get("srpc.mapping.exchange." + PROTOCOL);
         return ClassUtil.createObject(className);
+    }
+
+    public static Result dispatch(InvocationHandler handler) {
+        List<Client> clients = getClients(handler.getClassName());
+        // todo load balance
+        Client client = clients.get(0);
+        return exchange.send(handler, client);
     }
 
     public static List<Client> getClients(String className) {
@@ -49,7 +60,7 @@ public class ExchangeManager {
         }
         List<String> hosts = RegistryManager.getRegistry().getHosts(className);
         for (String host : hosts) {
-            clients.add(buildClient(host));
+            clients.add(exchange.getClient(host));
         }
         SERVICE_MAP.put(className,clients);
         return clients;

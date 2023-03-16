@@ -16,6 +16,7 @@ public class ApplyProxyFactory {
                 handler.setMethodName(method.getName());
                 handler.setTarget(target);
                 handler.setParams(params);
+                handler.setReturnType(method.getReturnType());
                 handler.setParameterTypes(method.getParameterTypes());
                 Result result = invoker.invoke(handler);
                 return result.getValue();

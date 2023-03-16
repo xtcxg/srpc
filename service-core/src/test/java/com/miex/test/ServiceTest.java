@@ -1,9 +1,16 @@
 package com.miex.test;
 
-import com.miex.exchange.http.HttpServer;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.miex.config.ApplicationConfig;
+import com.miex.exchange.http.HttpExchange;
 import com.miex.protocol.InvocationHandler;
 import com.miex.protocol.Result;
 import com.miex.provide.api.ProductService;
+import java.util.Properties;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
@@ -16,7 +23,24 @@ import java.nio.charset.StandardCharsets;
 
 public class ServiceTest {
 
+    static ApplicationConfig config;
 
+    @BeforeAll
+    public static void before() {
+
+        Properties properties = new Properties();
+        properties.setProperty("srpc.server.port","3695");
+
+        properties.setProperty("srpc.scan.provide","com.miex.provide");
+        properties.setProperty("srpc.scan.apply","com.miex.provide");
+
+        properties.setProperty("srpc.exchange.protocol", "json");
+
+        properties.setProperty("srpc.registry.type","redis");
+        properties.setProperty("srpc.registry.host","127.0.0.1");
+        properties.setProperty("srpc.registry.port","6379");
+        config = new ApplicationConfig(properties);
+    }
 
     public void after() {
         while (true) {
@@ -30,8 +54,8 @@ public class ServiceTest {
 
     @Test
     public void requestTest() throws IOException {
-        HttpServer httpServer = new HttpServer();
-        httpServer.start();
+        HttpExchange httpServer = new HttpExchange();
+        httpServer.init();
         after();
     }
 
@@ -77,6 +101,38 @@ public class ServiceTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+    }
+
+    @Test
+    public void gson() {
+        Gson gson = new GsonBuilder().addSerializationExclusionStrategy(new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes fieldAttributes) {
+                return fieldAttributes.getName().equals("throwable");
+            }
+
+            @Override
+            public boolean shouldSkipClass(Class<?> aClass) {
+                return false;
+            }
+        }).setExclusionStrategies(new ExclusionStrategy[]{
+            new ExclusionStrategy() {
+                @Override
+                public boolean shouldSkipField(FieldAttributes fieldAttributes) {
+                    return fieldAttributes.getName().equals("throwable");
+                }
+
+                @Override
+                public boolean shouldSkipClass(Class<?> aClass) {
+                    return false;
+                }
+            }
+        }).create();
+        Result result = new Result();
+        result.setCode(200);
+        String s = gson.toJson(result);
+        System.out.println(s);
 
     }
 }

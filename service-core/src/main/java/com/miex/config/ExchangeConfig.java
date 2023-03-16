@@ -1,6 +1,6 @@
 package com.miex.config;
 
-public class ServerConfig {
+public class ExchangeConfig {
 
     /**
      * 服务开启端口

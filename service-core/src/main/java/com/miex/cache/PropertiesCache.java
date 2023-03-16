@@ -37,15 +37,17 @@ public class PropertiesCache {
         CACHE.put("srpc.scan.provide", "");
         CACHE.put("srpc.scan.apply", "");
 
-        CACHE.put("srpc.server.port", "3695");
-        CACHE.put("srpc.server.protocol", "http");
+        CACHE.put("srpc.exchange.port", "3695");
+        CACHE.put("srpc.exchange.protocol", "http");
 
         CACHE.put("srpc.mapping.registry.redis","com.miex.registry.redis.RedisRegistry");
         CACHE.put("srpc.mapping.registry.zk","com.miex.registry.zk.ZkRegistry");
-        CACHE.put("srpc.mapping.registry.local","com.miex.registry.local.LocalRegistry");
-        CACHE.put("srpc.mapping.server.http","com.miex.exchange.http.HttpServer");
+        CACHE.put("srpc.mapping.registry.none","com.miex.registry.none.NoneRegistry");
+        CACHE.put("srpc.mapping.exchange.http","com.miex.exchange.http.HttpExchange");
         CACHE.put("srpc.mapping.client.http","com.miex.exchange.http.HttpClient");
-        CACHE.put("srpc.mapping.exporter.java","com.miex.protocol.DefaultExporter");
+        CACHE.put("srpc.mapping.exchange.json","com.miex.exchange.http.HttpJsonExchange");
+        CACHE.put("srpc.mapping.client.json","com.miex.exchange.http.HttpJsonClient");
+        CACHE.put("srpc.mapping.protocol.java","com.miex.protocol.DefaultExporter");
         CACHE.put("srpc.mapping.invoker.java","com.miex.protocol.DefaultInvoker");
     }
 
@@ -67,5 +69,9 @@ public class PropertiesCache {
     public static void checkProperties() {
 //        Assert.EmptyString(PROVIDE_CACHE.get("srpc.registry.type"),"property [srpc.registry.type] not found");
 //        Assert.EmptyString(PROVIDE_CACHE.get("srpc.server.protocol"),"property [srpc.server.protocol] not found");
+    }
+
+    public static void finish() {
+
     }
 }

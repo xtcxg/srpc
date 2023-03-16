@@ -33,7 +33,7 @@ public class SrpcComponentScanRegistrar implements ImportBeanDefinitionRegistrar
         Map<String, Object> allInvoker = protocolManager.getAllApply();
         registryInvokers(registry,allInvoker);
 
-        Map<String, String> classCache = protocolManager.getProvideClasses();
+        Map<String, Class<?>> classCache = protocolManager.getProvideClasses();
         registryRootBeans(registry,classCache);
 
         registryRootBean(registry, ProtocolBeanPostProcessor.class);
@@ -62,15 +62,11 @@ public class SrpcComponentScanRegistrar implements ImportBeanDefinitionRegistrar
         registry.registerBeanDefinition(beanName,beanDefinition);
     }
 
-    private void registryRootBeans(BeanDefinitionRegistry registry,Map<String,String> classMap) {
-        try {
-            for(Map.Entry<String,String> entry : classMap.entrySet()) {
-                Class<?> c = Class.forName(entry.getValue());
-                BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(c);
-                registry.registerBeanDefinition(entry.getKey(),builder.getBeanDefinition());
-            }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+    private void registryRootBeans(BeanDefinitionRegistry registry,Map<String,Class<?>> classMap) {
+        for(Map.Entry<String,Class<?>> entry : classMap.entrySet()) {
+            Class<?> c = entry.getValue();
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(c);
+            registry.registerBeanDefinition(entry.getKey(),builder.getBeanDefinition());
         }
     }
 

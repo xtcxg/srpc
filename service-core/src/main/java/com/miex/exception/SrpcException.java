@@ -21,10 +21,24 @@ public class SrpcException extends RuntimeException{
 		this.msg = Enum.SYSTEM_ERROR.getMsg();
 	}
 
-	private SrpcException(Integer code,String msg) {
+	public SrpcException(Integer code,String msg) {
 		super(msg);
 		this.code = code;
 		this.msg = msg;
+	}
+
+	private SrpcException(Integer code,String msg, Exception e) {
+		super(msg, e);
+		this.code = code;
+		this.msg = msg;
+	}
+
+	public SrpcException(Enum em, Exception e) {
+		this(em.getCode(),em.getMsg(),e);
+	}
+
+	public SrpcException(Enum em, String msg, Exception e) {
+		this(em.getCode(),msg,e);
 	}
 
 	public SrpcException(Enum e) {
@@ -42,6 +56,9 @@ public class SrpcException extends RuntimeException{
 		EXPORTER_ERROR(40001,"exporter error"),
 		INVOKER_ERROR(40002,"invoker error"),
 		RESOURCE_NOT_FOUND(40004, "resource not found"),
+		CLIENT_ERROR(40005, "client error"),
+		SERVER_ERROR(40006, "server error"),
+		TRANSFER_ERROR(40007, "transfer error"),
 
 
 		SYSTEM_ERROR(50001,"system error"),

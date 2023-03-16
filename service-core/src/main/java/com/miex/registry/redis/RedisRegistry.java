@@ -1,7 +1,7 @@
 package com.miex.registry.redis;
 
 import com.miex.config.RegistryConfig;
-import com.miex.config.ServerConfig;
+import com.miex.config.ExchangeConfig;
 import com.miex.exception.SrpcException;
 import com.miex.exchange.ExchangeManager;
 import com.miex.protocol.ProtocolManager;
@@ -9,6 +9,7 @@ import com.miex.registry.Registry;
 import com.miex.registry.RegistryManager;
 import com.miex.util.CollectionUtil;
 import com.miex.util.StringUtil;
+import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import redis.clients.jedis.Jedis;
@@ -37,7 +38,7 @@ public class RedisRegistry implements Registry {
     private static List<String> LOCAL_SERVICE;
 
     private static final RegistryConfig REGISTRY_CONFIG = RegistryManager.getRegistryConfig();
-    private static final ServerConfig SERVER_CONFIG = ExchangeManager.getServerConfig();
+    private static final ExchangeConfig SERVER_CONFIG = ExchangeManager.getExchangeConfig();
 
     // 服务状态
     private static Boolean ALIVE = true;
@@ -76,7 +77,8 @@ public class RedisRegistry implements Registry {
     @Override
     public void register() {
         // 本地数据
-        LOCAL_SERVICE = ProtocolManager.getInstance().getLocalKeys();
+        LOCAL_SERVICE = ProtocolManager.getInstance().getLocalKeys().stream().map(Class::getName)
+            .collect(Collectors.toList());
         keepAlive();
         jedis.hset(REGISTRY_CONFIG.getHostIndexName(), this.address, LOCAL_SERVICE.toString());
         refresh();

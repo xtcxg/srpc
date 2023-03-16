@@ -44,8 +44,7 @@ public class HttpClient implements Client {
             ois.close();
             return (Result) ois.readObject();
         } catch (IOException | InterruptedException | ClassNotFoundException e) {
-            e.printStackTrace();
-            throw new SrpcException(SrpcException.Enum.SEND_REQUEST_ERROR);
+            throw new SrpcException(SrpcException.Enum.SEND_REQUEST_ERROR, e);
         }
     }
 }
