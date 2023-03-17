@@ -6,6 +6,7 @@ import com.miex.cache.PropertiesCache;
 import com.miex.exception.SrpcException;
 import com.miex.protocol.ProtocolManager;
 import java.util.Collection;
+import java.util.Collections;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -164,6 +165,9 @@ public class Scanner {
    * @return
    */
   private static List<String> resolveBasePackage(String path) {
+    if ("".equals(path) && null != PropertiesCache.getInstance().get("srpc.classpath")) {
+      path = PropertiesCache.getInstance().get("srpc.classpath");
+    }
     List<String> paths = CollectionUtil.toList(path);
     if (CollectionUtil.isEmpty(paths)) {
       throw new SrpcException(SrpcException.Enum.PARAM_ERROR);

@@ -17,7 +17,7 @@ public class HttpJsonExchange extends AbstractExchange {
   @Override
   public void init() {
     try {
-      server  = HttpServer.create(new InetSocketAddress(exchangeConfig.getPort()),0);
+      server  = HttpServer.create(new InetSocketAddress(config.getPort()),0);
       server.createContext("/", new JsonDispatchHandler());
       server.start();
     } catch (IOException e) {
@@ -26,8 +26,8 @@ public class HttpJsonExchange extends AbstractExchange {
   }
 
   @Override
-  public Client getClient(String host) {
-    String[] arr = host.split(":");
+  public Client getClient(String address) {
+    String[] arr = address.split(":");
     return new HttpJsonClient(arr[0], Integer.parseInt(arr[1]));
   }
 

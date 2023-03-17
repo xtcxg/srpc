@@ -29,10 +29,4 @@ public class JsonExchangeTest {
 
     Thread.sleep(999999);
   }
-
-  @Test
-  public void t1() {
-    String icon = "";
-    String[] split = icon.split(",");
-  }
 }

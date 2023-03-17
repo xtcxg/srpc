@@ -20,7 +20,7 @@ public class DispatchHandler implements HttpHandler {
 
   private static final Log log = LogFactory.getLog(DispatchHandler.class);
 
-  private static final Exchange exchange = ExchangeManager.getServer();
+  private static final Exchange exchange = ExchangeManager.getExchange();
 
   @Override
   public void handle(HttpExchange exchange) throws IOException {

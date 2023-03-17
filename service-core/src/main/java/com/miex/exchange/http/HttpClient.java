@@ -47,4 +47,8 @@ public class HttpClient implements Client {
             throw new SrpcException(SrpcException.Enum.SEND_REQUEST_ERROR, e);
         }
     }
+
+    public String getAddress() {
+        return uri.getHost() + ":" + uri.getPort();
+    }
 }

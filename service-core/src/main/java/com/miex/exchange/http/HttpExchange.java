@@ -17,7 +17,8 @@ public class HttpExchange extends AbstractExchange {
     @Override
     public void init() {
         try {
-            server  = com.sun.net.httpserver.HttpServer.create(new InetSocketAddress(exchangeConfig.getPort()),0);
+            server  = com.sun.net.httpserver.HttpServer
+                .create(new InetSocketAddress(config.getPort()),0);
             server.createContext("/", new DispatchHandler());
             server.start();
         } catch (IOException e) {
@@ -26,13 +27,14 @@ public class HttpExchange extends AbstractExchange {
     }
 
     @Override
-    public Client getClient(String host) {
+    public Client getClient(String address) {
         try {
-            String[] arr = host.split(":");
-            URI uri = new URI("http",null,arr[0],Integer.parseInt(arr[1]),"/",null,null);
+            String[] arr = address.split(":");
+            URI uri = new URI("http",null,arr[0],Integer.parseInt(arr[1]),
+                "/",null,null);
             return new HttpClient(uri);
         } catch (URISyntaxException e) {
-            throw new SrpcException(Enum.CLIENT_ERROR, "create client error, host:" + host, e);
+            throw new SrpcException(Enum.CLIENT_ERROR, "create client error, host:" + address, e);
         }
     }
 }

@@ -99,7 +99,7 @@ public class JsonDispatchHandler implements HttpHandler {
       handler.setMethodName(url[1]);
       handler.setParameterTypes(paramTypes);
       handler.setParams(params);
-      Result result = ExchangeManager.getServer().dispatch(handler);
+      Result result = ExchangeManager.getExchange().dispatch(handler);
       result.setCode(200);
 //      result.setMsg("");
       byte[] bs = gson.toJson(result).getBytes(StandardCharsets.UTF_8);

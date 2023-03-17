@@ -9,6 +9,18 @@ import com.miex.registry.Registry;
 import com.miex.registry.RegistryManager;
 import com.miex.util.CollectionUtil;
 import com.miex.util.StringUtil;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -18,16 +30,9 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.params.SetParams;
 
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.*;
-
 public class RedisRegistry implements Registry {
 
     private static final Log log = LogFactory.getLog(RedisRegistry.class);
-
-    private Jedis jedis;
 
     private static ConcurrentHashMap<String, List<String>> REGISTRY_INFO = new ConcurrentHashMap<>();
 
@@ -55,23 +60,20 @@ public class RedisRegistry implements Registry {
     @Override
     public void connect(String host, Integer port, String name, String password) {
         Integer serverPort = SERVER_CONFIG.getPort();
-        try {
-            this.address = Inet4Address.getLocalHost().getHostAddress() + ":" + serverPort;
-        } catch (UnknownHostException e) {
-            this.address = SERVER_CONFIG.getHost() + ":" + serverPort;
-            if (StringUtil.isEmpty(this.address)) {
-                throw new SrpcException(SrpcException.Enum.SYSTEM_ERROR, "can't acquire service's ip,also can set value [srpc.ip]");
-            }
-        }
+        this.address = SERVER_CONFIG.getHost() + ":" + serverPort;
         JedisPoolConfig config = new JedisPoolConfig();
-        config.setMaxTotal(20);
-        config.setMaxIdle(10);
+        config.setMaxTotal(100);
+        config.setMaxIdle(50);
+        config.setMinIdle(5);
+        config.setMaxWait(Duration.ofSeconds(2));
+        config.setTimeBetweenEvictionRuns(Duration.ofSeconds(15));
         jedisPool = new JedisPool(config, host, port);
-        jedis = jedisPool.getResource();
+        Jedis jedis = jedisPool.getResource();
         jedis.connect();
         if (!"PONG".equals(jedis.ping())) {
             throw new SrpcException(SrpcException.Enum.REGISTRY_CONNECT_FAIL, "registry fail [" + host + ":" + port + "]");
         }
+        jedisPool.returnResource(jedis);
     }
 
     @Override
@@ -80,7 +82,8 @@ public class RedisRegistry implements Registry {
         LOCAL_SERVICE = ProtocolManager.getInstance().getLocalKeys().stream().map(Class::getName)
             .collect(Collectors.toList());
         keepAlive();
-        jedis.hset(REGISTRY_CONFIG.getHostIndexName(), this.address, LOCAL_SERVICE.toString());
+        jedisPool.getResource().hset(REGISTRY_CONFIG.getHostIndexName(),
+            this.address, LOCAL_SERVICE.toString());
         refresh();
         lock();
         // 注册中心数据
@@ -97,28 +100,25 @@ public class RedisRegistry implements Registry {
     @Override
     public void refresh() {
         Jedis jedis = jedisPool.getResource();
-        try {
-            long start = System.currentTimeMillis();
-            lock();
-            Set<String> members = jedis.hkeys(REGISTRY_CONFIG.getHostIndexName());
-            Map<String, List<String>> registryService = new HashMap<>();
-            for (String member : members) {
-                if (StringUtil.isEmpty(jedis.get(member))) {
-                    // 清除下线的服务
-                    jedis.hdel(REGISTRY_CONFIG.getHostIndexName(), member);
-                } else {
-                    String serverInfo = jedis.hget(REGISTRY_CONFIG.getHostIndexName(), member);
-                    List<String> targetService = CollectionUtil.toList(serverInfo);
-                    merge(targetService, registryService, member);
-                }
+        long start = System.currentTimeMillis();
+        lock();
+        Set<String> members = jedis.hkeys(REGISTRY_CONFIG.getHostIndexName());
+        Map<String, List<String>> registryService = new HashMap<>();
+        for (String member : members) {
+            if (StringUtil.isEmpty(jedis.get(member))) {
+                // 清除下线的服务
+                jedis.hdel(REGISTRY_CONFIG.getHostIndexName(), member);
+            } else {
+                String serverInfo = jedis.hget(REGISTRY_CONFIG.getHostIndexName(), member);
+                List<String> targetService = CollectionUtil.toList(serverInfo);
+                merge(targetService, registryService, member);
             }
-            jedis.del(REGISTRY_CONFIG.getServerIndexName());
-            push(registryService);
-            log.debug("refresh used " + (System.currentTimeMillis() - start) + "ms");
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        jedis.del(REGISTRY_CONFIG.getServerIndexName());
+        push(registryService);
+        ExchangeManager.getInstance().syncServer(registryService);
         unlock();
+        log.debug("refresh used " + (System.currentTimeMillis() - start) + "ms");
     }
 
     /**
@@ -129,7 +129,8 @@ public class RedisRegistry implements Registry {
      * @param addr            指定服务所在的地址
      * @return 合并结果
      */
-    private Map<String, List<String>> merge(List<String> targetService, Map<String, List<String>> registryService, String addr) {
+    private Map<String, List<String>> merge(List<String> targetService, Map<String,
+        List<String>> registryService, String addr) {
         for (String name : targetService) {
             registryService.merge(name, new ArrayList<>() {{
                 add(addr);
@@ -148,14 +149,15 @@ public class RedisRegistry implements Registry {
      *
      * @param targetService   指定的服务数据
      * @param registryService 服务器服务数据
-     * @param addr            指定服务所在的地址
+     * @param address         指定服务所在的地址
      * @return 剔除结果
      */
-    private Map<String, List<String>> exclude(List<String> targetService, Map<String, List<String>> registryService, String addr) {
+    private Map<String, List<String>> exclude(List<String> targetService,
+        Map<String, List<String>> registryService, String address) {
         for (String name : targetService) {
             List<String> list = registryService.get(name);
             if (null != list) {
-                list.remove(addr);
+                list.remove(address);
             }
         }
         return registryService;
@@ -167,8 +169,10 @@ public class RedisRegistry implements Registry {
             log.error("can't acquire lock to use registry");
             throw new SrpcException(SrpcException.Enum.REGISTRY_LOCK_FAIL);
         }
+        Jedis jedis = jedisPool.getResource();
         jedis.hdel(REGISTRY_CONFIG.getHostIndexName(), address);
         jedis.del(address);
+        jedisPool.returnResource(jedis);
         Map<String, List<String>> registryService = pull();
         exclude(LOCAL_SERVICE, registryService, this.address);
         push(registryService);
@@ -195,6 +199,7 @@ public class RedisRegistry implements Registry {
         for (int i = 0; i < names.length; i++) {
             serviceMap.put(names[i], CollectionUtil.toList(hosts.get(i)));
         }
+        jedisPool.returnResource(jedis);
         return serviceMap;
     }
 
@@ -246,9 +251,10 @@ public class RedisRegistry implements Registry {
             long time = REGISTRY_CONFIG.getTtl();
             while (ALIVE) {
                 try {
-                    log.debug("redis registry heart beat:" + address);
-                    jedisPool.getResource().setex(address, time, LOCAL_SERVICE.toString());
-                    Thread.sleep(10000);
+                    log.info("redis registry heart beat:" + address);
+                    Jedis jedis = jedisPool.getResource();
+                    jedis.setex(address, time, LOCAL_SERVICE.toString());
+                    jedisPool.returnResource(jedis);                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -289,6 +295,7 @@ public class RedisRegistry implements Registry {
         // todo 使用脚本保证原子性
         Jedis jedis = jedisPool.getResource();
         String owner = jedis.get(REGISTRY_CONFIG.getLock());
+        jedisPool.returnResource(jedis);
         if (StringUtil.isEmpty(owner) || address.equals(owner)) {
             // 如果上锁成功，保持锁
             STATE++;
@@ -301,7 +308,9 @@ public class RedisRegistry implements Registry {
                 SetParams pn = SetParams.setParams().ex(3);
                 while (LOCKED) {
                     try {
-                        jedis.set(REGISTRY_CONFIG.getLock(), address, pn);
+                        Jedis j = jedisPool.getResource();
+                        j.set(REGISTRY_CONFIG.getLock(), address, pn);
+                        jedisPool.returnResource(j);
                         Thread.sleep(2000);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -315,6 +324,7 @@ public class RedisRegistry implements Registry {
             LOCKED = false;
             return false;
         }
+
     }
 
     private void unlock() {

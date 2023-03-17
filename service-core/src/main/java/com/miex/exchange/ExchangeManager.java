@@ -3,78 +3,96 @@ package com.miex.exchange;
 import com.miex.cache.PropertiesCache;
 import com.miex.config.ExchangeConfig;
 import com.miex.exception.SrpcException;
+import com.miex.exception.SrpcException.Enum;
+import com.miex.loadbalance.LoadBalance;
 import com.miex.protocol.InvocationHandler;
 import com.miex.protocol.Result;
-import com.miex.registry.RegistryManager;
 import com.miex.util.ClassUtil;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
+import com.miex.util.StringUtil;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map.Entry;
 
 public class ExchangeManager {
 
-    private static final ExchangeConfig exchangeConfig;
-    private static final String PREFIX = "srpc.exchange.";
-    private static final String PROTOCOL;
-    private static Exchange exchange;
-    private static final Map<String,List<Client>> SERVICE_MAP = new ConcurrentHashMap<>();
+  private static final String PROTOCOL;
+  private static ExchangeManager exchangeManager;
+  private static final Exchange exchange;
+  private static final LoadBalance loadBalance;
 
-    static {
-        exchangeConfig = ClassUtil.buildFromProperties(PREFIX,
-            ExchangeConfig.class, PropertiesCache.getInstance().getProperties());
-        PROTOCOL = exchangeConfig.getProtocol();
-        exchange = buildServer();
-    }
+  static {
+    try {
+      PropertiesCache properties = PropertiesCache.getInstance();
+      PROTOCOL = properties.get("srpc.exchange.protocol");
+      String exchangeClass = properties.get("srpc.mapping.exchange." + PROTOCOL);
+      String clientClass = properties.get("srpc.mapping.client." + PROTOCOL);
+      Class<? extends Exchange> ec = (Class<? extends Exchange>) Class.forName(exchangeClass);
+      Class<? extends Client> cc = (Class<? extends Client>) Class.forName(clientClass);
+      exchange = ClassUtil.createObject(ec);
+      exchange.getConfig().setExchange(ec);
+      exchange.getConfig().setClient(cc);
+      exchange.getConfig().setProtocol(PROTOCOL);
+      exchange.getConfig().setHost(StringUtil.isEmpty(properties.get("srpc.exchange.host")) ?
+          Inet4Address.getLocalHost().getHostAddress() : properties.get("srpc.exchange.host"));
+      exchange.getConfig().setPort(Integer.valueOf(properties.get("srpc.exchange.port")));
 
-    public static ExchangeConfig getExchangeConfig() {
-        return exchangeConfig;
+      String loadBalanceType = properties.get("srpc.loadbalance.type");
+      String loadBalanceClass = properties.get("srpc.mapping.loadbalance." + loadBalanceType);
+      Class<? extends LoadBalance> lbc =
+          (Class<? extends LoadBalance>) Class.forName(loadBalanceClass);
+      loadBalance = ClassUtil.createObject(lbc);
+      loadBalance.setConfig(lbc, buildLoadBalanceExtra(properties, loadBalanceType));
+    } catch (ClassNotFoundException e) {
+      throw new SrpcException(Enum.EXCHANGE_ERROR, "class not found", e);
+    } catch (UnknownHostException e) {
+      throw new SrpcException(Enum.EXCHANGE_ERROR, "obtain server ip error", e);
     }
+  }
 
-    public static synchronized Exchange getServer() {
-        if (null == exchange) {
-            exchange = buildServer();
-        }
-        return exchange;
-    }
+  private ExchangeManager() {}
 
-    private static Exchange buildServer() {
-        String className = PropertiesCache.getInstance().get("srpc.mapping.exchange." + PROTOCOL);
-        return ClassUtil.createObject(className);
+  public static ExchangeManager getInstance() {
+    if (null == exchangeManager) {
+      exchangeManager = new ExchangeManager();
     }
+    return exchangeManager;
+  }
 
-    public static Result dispatch(InvocationHandler handler) {
-        List<Client> clients = getClients(handler.getClassName());
-        // todo load balance
-        Client client = clients.get(0);
-        return exchange.send(handler, client);
-    }
+  public void openServer() {
+    exchange.init();
+  }
 
-    public static List<Client> getClients(String className) {
-        List<Client> clients = SERVICE_MAP.get(className);
-        if (null == clients) {
-            clients = new ArrayList<>();
-        }
-        List<String> hosts = RegistryManager.getRegistry().getHosts(className);
-        for (String host : hosts) {
-            clients.add(exchange.getClient(host));
-        }
-        SERVICE_MAP.put(className,clients);
-        return clients;
-    }
+  public static ExchangeConfig getExchangeConfig() {
+    return exchange.getConfig();
+  }
 
-    private static Client buildClient(String host) {
-        String className = PropertiesCache.getInstance().get("srpc.mapping.client." + PROTOCOL);
-        String[] arr = host.split(":");
-        try {
-            URI uri = new URI("http",null,arr[0],Integer.parseInt(arr[1]),"/",null,null);
-            return ClassUtil.createObject(className,new Class[]{URI.class},new Object[]{uri});
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            throw new SrpcException(SrpcException.Enum.SYSTEM_ERROR,"build uri error,host [" + host + "]");
-        }
+  public static Exchange getExchange() {
+    return exchange;
+  }
+
+  public static Result dispatch(InvocationHandler handler) {
+    Client client = loadBalance.getClient(handler.getClassName());
+    return exchange.send(handler, client);
+  }
+
+  private static Map<String, String> buildLoadBalanceExtra(PropertiesCache properties, String type) {
+    Map<String, String> map = properties.getProperties();
+    Map<String, String> extra = new HashMap<>();
+    String prefix = "srpc.loadbalance." + type + ".";
+    for (Entry<String, String> entry : map.entrySet()) {
+      String key = entry.getKey();
+      if (key.startsWith(prefix)) {
+        extra.put(key.substring(key.lastIndexOf(".") + 1), entry.getValue());
+      }
     }
+    return extra;
+  }
+
+  public void syncServer(Map<String, List<String>> serverMap) {
+    loadBalance.refreshServer(serverMap);
+  }
 }

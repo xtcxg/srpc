@@ -38,17 +38,25 @@ public class PropertiesCache {
         CACHE.put("srpc.scan.apply", "");
 
         CACHE.put("srpc.exchange.port", "3695");
+        CACHE.put("srpc.exchange.host", "");
         CACHE.put("srpc.exchange.protocol", "http");
 
+        CACHE.put("srpc.loadbalance.type", "simple");
+
+        CACHE.put("srpc.mapping.protocol.java","com.miex.protocol.DefaultExporter");
+        CACHE.put("srpc.mapping.invoker.java","com.miex.protocol.DefaultInvoker");
+        /* register */
         CACHE.put("srpc.mapping.registry.redis","com.miex.registry.redis.RedisRegistry");
         CACHE.put("srpc.mapping.registry.zk","com.miex.registry.zk.ZkRegistry");
         CACHE.put("srpc.mapping.registry.none","com.miex.registry.none.NoneRegistry");
+        /* exchange */
         CACHE.put("srpc.mapping.exchange.http","com.miex.exchange.http.HttpExchange");
         CACHE.put("srpc.mapping.client.http","com.miex.exchange.http.HttpClient");
         CACHE.put("srpc.mapping.exchange.json","com.miex.exchange.http.HttpJsonExchange");
         CACHE.put("srpc.mapping.client.json","com.miex.exchange.http.HttpJsonClient");
-        CACHE.put("srpc.mapping.protocol.java","com.miex.protocol.DefaultExporter");
-        CACHE.put("srpc.mapping.invoker.java","com.miex.protocol.DefaultInvoker");
+        /* load balance */
+        CACHE.put("srpc.mapping.loadbalance.simple","com.miex.loadbalance.SimpleLoadBalance");
+
     }
 
     public void put(String key, String value) {

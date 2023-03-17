@@ -13,22 +13,30 @@ import java.util.Properties;
 
 public class ApplicationConfig {
 
-  private final PropertiesCache PROPERTIES_CACHE = PropertiesCache.getInstance();
-
-  private final Registry registry;
-  private final Exchange exchange;
+  private final PropertiesCache propertiesCache = PropertiesCache.getInstance();
   private final ProtocolManager protocolManager;
+  private final ExchangeManager exchangeManager;
+  private final RegistryManager registryManager;
 
   public ApplicationConfig(Properties properties) {
+    this(properties, null);
+  }
+
+  public ApplicationConfig(Properties properties, Class<?> main) {
+    if (null != main) {
+      properties.put("srpc.classpath", main.getPackageName());
+    }
+
     setProperties(properties);
 
     this.protocolManager = ProtocolManager.getInstance();
 
-    this.exchange = ExchangeManager.getServer();
+    this.exchangeManager = ExchangeManager.getInstance();
 
-    this.registry = RegistryManager.getRegistry();
+    this.registryManager = RegistryManager.getInstance();
 
     init();
+
     System.err.println("SRPC start complete");
   }
 
@@ -37,7 +45,7 @@ public class ApplicationConfig {
     String key;
     while (enumeration.hasMoreElements()) {
       key = enumeration.nextElement().toString();
-      PROPERTIES_CACHE.put(key, properties.getProperty(key));
+      propertiesCache.put(key, properties.getProperty(key));
     }
     PropertiesCache.checkProperties();
   }
@@ -50,10 +58,10 @@ public class ApplicationConfig {
     this.protocolManager.createAllExporter();
 
     // 开启服务器
-    this.exchange.init();
+    this.exchangeManager.openServer();
 
     // 注册服务
-    this.registry.register();
+    this.registryManager.register();
   }
 
   public ProtocolManager getProtocolManager() {

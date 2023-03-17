@@ -14,9 +14,11 @@ public class ApplyTest {
     @BeforeAll
     public static void before() {
         Properties properties = new Properties();
-        properties.setProperty("srpc.server.port","3696");
+        properties.setProperty("srpc.exchange.port","3696");
 
         properties.setProperty("srpc.scan","com.miex.apply");
+
+        properties.setProperty("srpc.exchange.protocol", "json");
 
         properties.setProperty("srpc.registry.type","redis");
         properties.setProperty("srpc.registry.host","127.0.0.1");
@@ -28,6 +30,7 @@ public class ApplyTest {
     @Test
     public void create() {
         ProtocolManager protocolManager = config.getProtocolManager();
+
         ProductService productService = protocolManager.getApply(ProductService.class);
         String name = productService.getName(2L);
         System.out.println(name);

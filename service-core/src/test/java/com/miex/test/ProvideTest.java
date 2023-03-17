@@ -8,6 +8,7 @@ import com.miex.provide.api.ProductService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Scanner;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -29,14 +30,16 @@ public class ProvideTest {
 
         properties.setProperty("srpc.exchange.protocol", "json");
 
-        properties.setProperty("srpc.registry.type","none");
+        properties.setProperty("srpc.registry.type","redis");
         properties.setProperty("srpc.registry.host","127.0.0.1");
         properties.setProperty("srpc.registry.port","6379");
+
+        properties.setProperty("srpc.loadbalance.simple.thread", "10");
         config = new ApplicationConfig(properties);
     }
 
     @Test
-    public void providerTest() {
+    public void providerTest() throws InterruptedException {
         ProtocolManager protocolManager = config.getProtocolManager();
         Exporter<ProductService> exporter = protocolManager.getExporter(ProductService.class);
         ProductService target = exporter.getTarget();
@@ -54,7 +57,7 @@ public class ProvideTest {
     @AfterAll
     private static void after() throws InterruptedException {
         for(;;) {
-            Thread.sleep(99999);
+            Thread.sleep(99999999);
         }
     }
 }

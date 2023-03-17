@@ -16,7 +16,7 @@ public class SrpcSpringApplicationConfig {
 
     @PostConstruct
     public void init() {
-        this.exchange = ExchangeManager.getServer();
+        this.exchange = ExchangeManager.getExchange();
         this.exchange.init();
 
         this.registry = RegistryManager.getRegistry();

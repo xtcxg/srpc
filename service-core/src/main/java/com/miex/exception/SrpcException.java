@@ -59,6 +59,7 @@ public class SrpcException extends RuntimeException{
 		CLIENT_ERROR(40005, "client error"),
 		SERVER_ERROR(40006, "server error"),
 		TRANSFER_ERROR(40007, "transfer error"),
+		EXCHANGE_ERROR(40008, "exchange error"),
 
 
 		SYSTEM_ERROR(50001,"system error"),

@@ -1,5 +1,7 @@
 package com.miex.config;
 
+import com.miex.registry.Registry;
+
 public class RegistryConfig {
     Integer port;
 
@@ -31,6 +33,16 @@ public class RegistryConfig {
      * 服务注册过期时间/s
      */
     Long ttl;
+
+    Class<? extends Registry> registry;
+
+    public Class<? extends Registry> getRegistry() {
+        return registry;
+    }
+
+    public void setRegistry(Class<? extends Registry> registry) {
+        this.registry = registry;
+    }
 
     public Integer getPort() {
         return port;

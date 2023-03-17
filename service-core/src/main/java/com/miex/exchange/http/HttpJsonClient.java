@@ -1,14 +1,15 @@
 package com.miex.exchange.http;
 
-import com.google.common.reflect.TypeToken;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.miex.exception.SrpcException;
 import com.miex.exception.SrpcException.Enum;
 import com.miex.exchange.Client;
 import com.miex.protocol.InvocationHandler;
 import com.miex.protocol.Result;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
@@ -17,7 +18,6 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.net.http.HttpClient;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,13 +25,28 @@ public class HttpJsonClient implements Client {
   private static final HttpClient client = HttpClient.newBuilder()
       .version(java.net.http.HttpClient.Version.HTTP_1_1)
       .connectTimeout(Duration.ofSeconds(2)).build();
-
   String host;
   int port;
+  String address;
+  Gson gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy[]{
+      new ExclusionStrategy() {
+        @Override
+        public boolean shouldSkipField(FieldAttributes fieldAttributes) {
+          return fieldAttributes.getName().equals("throwable");
+        }
+
+        @Override
+        public boolean shouldSkipClass(Class<?> aClass) {
+          return false;
+        }
+      }
+  }).create();
+
 
   public HttpJsonClient(String host, int port) {
     this.host = host;
     this.port = port;
+    this.address = host + ":" + port;
   }
 
   @Override
@@ -41,7 +56,7 @@ public class HttpJsonClient implements Client {
     String res = "";
     try {
       uri = new URI("http", null, host, port,
-          "/" + handler.getClassName() + "#" + handler.getMethodName(), null, null);
+          "/" + handler.getClassName() + "/" + handler.getMethodName(), null, null);
 
       Object[] params = handler.getParams();
       if (null != params && 0 < params.length) {
@@ -59,7 +74,7 @@ public class HttpJsonClient implements Client {
       HttpResponse<String> response = client.send(request,
           BodyHandlers.ofString(StandardCharsets.UTF_8));
       res = response.body();
-      return getBody(res, handler.getReturnType());
+      return gson.fromJson(res, Result.class);
     } catch (SrpcException e) {
       throw new SrpcException(Enum.TRANSFER_ERROR,
           "rpc error, path:" + uri.getPath() + ", body:" + body + "response:" + res, e);
@@ -70,21 +85,7 @@ public class HttpJsonClient implements Client {
     }
   }
 
-  private Result getBody(String res, Class<?> c) {
-    Gson gson = new Gson();
-    Result result = new Result();
-    try {
-      Object o = gson.fromJson(res, c);
-      result.setValue(o);
-      return result;
-    } catch (Exception e) {
-      try {
-        Type type = new TypeToken<HashMap<String,Object>>(){}.getType();
-        Map<String, Object> rmap = gson.fromJson(res, type);
-        throw new SrpcException((Integer) rmap.get("code"), rmap.get("msg").toString());
-      } catch (Exception ex) {
-        throw new SrpcException(Enum.SYSTEM_ERROR, ex);
-      }
-    }
+  public String getAddress() {
+    return this.address;
   }
 }
