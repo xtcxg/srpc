@@ -75,8 +75,7 @@ public class ExchangeManager {
   }
 
   public static Result dispatch(InvocationHandler handler) {
-    Client client = loadBalance.getClient(handler.getClassName());
-    return exchange.send(handler, client);
+    return loadBalance.dispatch(handler, exchange);
   }
 
   private static Map<String, String> buildLoadBalanceExtra(PropertiesCache properties, String type) {

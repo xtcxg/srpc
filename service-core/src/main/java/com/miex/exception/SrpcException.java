@@ -60,6 +60,7 @@ public class SrpcException extends RuntimeException{
 		SERVER_ERROR(40006, "server error"),
 		TRANSFER_ERROR(40007, "transfer error"),
 		EXCHANGE_ERROR(40008, "exchange error"),
+		LOAD_BALANCE_ERROR(40009, " load balance error"),
 
 
 		SYSTEM_ERROR(50001,"system error"),

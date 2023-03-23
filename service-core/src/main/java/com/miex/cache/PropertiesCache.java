@@ -25,6 +25,8 @@ public class PropertiesCache {
     }
 
     private PropertiesCache() {
+        CACHE.put("srpc.classpath", "");
+
         CACHE.put("srpc.registry.type", "redis");
         CACHE.put("srpc.registry.name", "");
         CACHE.put("srpc.registry.password", "");
@@ -56,6 +58,7 @@ public class PropertiesCache {
         CACHE.put("srpc.mapping.client.json","com.miex.exchange.http.HttpJsonClient");
         /* load balance */
         CACHE.put("srpc.mapping.loadbalance.simple","com.miex.loadbalance.SimpleLoadBalance");
+        CACHE.put("srpc.mapping.loadbalance.tryBest","com.miex.loadbalance.TryBestLoadBalance");
 
     }
 

@@ -3,15 +3,19 @@ package com.miex.loadbalance;
 import com.miex.config.LoadBalanceConfig;
 import com.miex.exchange.Client;
 import com.miex.exchange.Exchange;
+import com.miex.protocol.InvocationHandler;
+import com.miex.protocol.Result;
 import com.miex.registry.RegistryManager;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public interface LoadBalance {
 
   /**
-   * address : [server list]
+   * class name : [host list]
    */
   Map<String, List<String>> serverMap = new HashMap<>();
   /**
@@ -31,5 +35,5 @@ public interface LoadBalance {
     config.setExtra(extra);
   }
 
-  Client getClient(String serverName);
+  Result dispatch(InvocationHandler handler, Exchange exchange);
 }

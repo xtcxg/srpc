@@ -24,6 +24,8 @@ public class ApplyTest {
         properties.setProperty("srpc.registry.host","127.0.0.1");
         properties.setProperty("srpc.registry.port","6379");
 
+        properties.setProperty("srpc.loadbalance.type", "tryBest");
+
         config = new ApplicationConfig(properties);
     }
 
