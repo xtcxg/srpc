@@ -8,7 +8,9 @@ import com.miex.protocol.InvocationHandler;
 import com.miex.protocol.Result;
 import com.miex.util.CollectionUtil;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TryBestLoadBalance implements LoadBalance {
+
+  private final Map<String, Long> count = new HashMap<>();
 
   @Override
   public Result dispatch(InvocationHandler handler, Exchange exchange)  {
@@ -35,10 +39,17 @@ public class TryBestLoadBalance implements LoadBalance {
     }
     try {
       Result result = CompletableFuture.supplyAsync(() -> {
-        for (Client client : clients) {
+        Long size = count.get(serverName);
+        if (null == size) {
+          size = 0L;
+        }
+        count.put(serverName, size + 1);
+        for (int i = 0; i < count.size(); i++) {
           try {
-            return client.send(handler);
+            Client c = clients.get((int)(size % (clients.size() - 1)));
+            return c.send(handler);
           } catch (Exception e) {
+            size++;
             log.error("send request error, server:" + serverName, e);
           }
         }
@@ -49,7 +60,7 @@ public class TryBestLoadBalance implements LoadBalance {
       }
       return result;
     } catch (ExecutionException | InterruptedException e) {
-      throw new RuntimeException(e);
+      throw new SrpcException(Enum.SERVER_ERROR, e);
     } catch (TimeoutException e) {
       throw new SrpcException(Enum.EXCHANGE_ERROR, "timeout");
     }
