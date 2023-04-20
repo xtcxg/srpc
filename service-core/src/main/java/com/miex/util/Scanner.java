@@ -6,7 +6,8 @@ import com.miex.cache.PropertiesCache;
 import com.miex.exception.SrpcException;
 import com.miex.protocol.ProtocolManager;
 import java.util.Collection;
-import java.util.Collections;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Scanner {
-
+  private static final Log logger = LogFactory.getLog(Scanner.class);
   static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
   private static final PathMatchingResourcePatternResolver RESOURCE_PATTERN_RESOLVER =
       new PathMatchingResourcePatternResolver();
