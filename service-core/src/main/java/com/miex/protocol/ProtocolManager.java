@@ -21,7 +21,7 @@ public class ProtocolManager {
   /* 存储使用 @Apply 的类 */
   private static final Set<String> APPLY_CACHE = new HashSet<>();
   /* className : proxyObject */
-  private static final ConcurrentHashMap<String, Object> APPLY_MAP = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<Class<?>, Object> APPLY_MAP = new ConcurrentHashMap<>();
 
   /**
    * name -> interface - -> Exporter (proxy)
@@ -76,7 +76,7 @@ public class ProtocolManager {
   /**
    * 获取全部代理服务
    */
-  public Map<String, Object> getAllApply() {
+  public Map<Class<?>, Object> getAllApply() {
     return APPLY_MAP;
   }
 
@@ -102,7 +102,7 @@ public class ProtocolManager {
   public <T> T createApply(String className, Class<T> type) {
     Invoker<T> invoker = new DefaultInvoker<>(type);
     T target = ApplyProxyFactory.proxy(invoker, type);
-    APPLY_MAP.put(className, target);
+    APPLY_MAP.put(type, target);
     return target;
   }
 
@@ -200,5 +200,9 @@ public class ProtocolManager {
 
   public void addProvideMap (Class<?> i, Class<?> c) {
     PROVIDER_MAP.put(i, c);
+  }
+
+  public ConcurrentHashMap<Class<?>, Class<?>> getProvideMap() {
+    return PROVIDER_MAP;
   }
 }

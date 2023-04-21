@@ -1,7 +1,8 @@
 package com.miex.annotation;
 
+import com.miex.protocol.Exporter;
 import com.miex.protocol.ProtocolManager;
-import com.miex.util.StringUtil;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
@@ -10,20 +11,30 @@ import java.util.Map;
 import java.util.Set;
 
 public class ProtocolBeanPostProcessor implements BeanPostProcessor {
-    private final Map<String, Class<?>> classCache = ProtocolManager.getInstance().getProvideClasses();
-    private final Set<String> applyCache = ProtocolManager.getInstance().getAllApplyCache();
-    private final Map<String, Object> applyMap = ProtocolManager.getInstance().getAllApply();
+    ProtocolManager protocolManager = ProtocolManager.getInstance();
+    private final Set<String> applyCache = protocolManager.getAllApplyCache();
+    private final Map<Class<?>, Object> applyMap = protocolManager.getAllApply();
+    private final ConcurrentHashMap<Class<?>, Class<?>> providerMap = protocolManager.getProvideMap();
+
+
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-//        Class<?> c = classCache.get(beanName);
-//        if (null != c) {
-//            ProtocolManager.getInstance().getExporter(bean.getClass());
-//        }
-        String className = bean.getClass().getName();
-        if (applyCache.contains(className)) {
+        Class<?> bc = bean.getClass();
+        providerMap.forEach((i, c) -> {
+            if (c.equals(bc)) {
+                setEv(i, bean);
+            }
+        });
+        if (applyCache.contains(bc.getName())) {
             setValue(bean);
         }
         return bean;
+    }
+
+    private void setEv(Class<?> i, Object bean) {
+        Exporter<?> exporter = protocolManager.getExporter(i);
+        exporter.setTarget(bean);
+        exporter.export();
     }
 
     private void setValue(Object bean) {
@@ -32,7 +43,7 @@ public class ProtocolBeanPostProcessor implements BeanPostProcessor {
             for (Field field : fields) {
                 if (null != field.getAnnotation(Apply.class)) {
                     Class<?> type = field.getType();
-                    Object apply = applyMap.get(type.getName());
+                    Object apply = applyMap.get(type);
                     field.setAccessible(true);
                     field.set(bean,apply);
                 }

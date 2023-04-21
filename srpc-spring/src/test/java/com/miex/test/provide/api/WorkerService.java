@@ -5,4 +5,6 @@ import com.miex.annotation.Provide;
 @Provide
 public interface WorkerService {
 
+  void doWork();
+
 }

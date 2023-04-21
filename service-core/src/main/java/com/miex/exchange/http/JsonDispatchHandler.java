@@ -39,18 +39,16 @@ public class JsonDispatchHandler implements HttpHandler {
     classMapper.put(boolean.class.getName(), boolean.class);
     classMapper.put(byte.class.getName(), byte.class);
     classMapper.put(char.class.getName(), char.class);
-    gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy[]{
-        new ExclusionStrategy() {
-          @Override
-          public boolean shouldSkipField(FieldAttributes fieldAttributes) {
-            return fieldAttributes.getName().equals("throwable");
-          }
+    gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy() {
+      @Override
+      public boolean shouldSkipField(FieldAttributes fieldAttributes) {
+        return fieldAttributes.getName().equals("throwable");
+      }
 
-          @Override
-          public boolean shouldSkipClass(Class<?> aClass) {
-            return false;
-          }
-        }
+      @Override
+      public boolean shouldSkipClass(Class<?> aClass) {
+        return false;
+      }
     }).create();
   }
 
@@ -81,26 +79,33 @@ public class JsonDispatchHandler implements HttpHandler {
       }
 
       String[] url = exchange.getRequestURI().getPath().substring(1).split("/");
-      LinkedHashMap<String, Object> paramMap = gson.fromJson(body, type);
-      Object[] params = new Object[paramMap.size()];
-      Class<?>[] paramTypes = new Class[paramMap.size()];
-      int i = 0;
-      for (Entry<String, Object> entry : paramMap.entrySet()) {
-        Class<?> c = classMapper.get(entry.getKey());
-        if (null == c) {
-          c = Class.forName(entry.getKey());
+      Result result;
+      if ("toString".equalsIgnoreCase(url[1])) {
+        result = new Result();
+        result.setValue("");
+        result.setCode(200);
+      } else {
+        LinkedHashMap<String, Object> paramMap = gson.fromJson(body, type);
+        Object[] params = new Object[paramMap.size()];
+        Class<?>[] paramTypes = new Class[paramMap.size()];
+        int i = 0;
+        for (Entry<String, Object> entry : paramMap.entrySet()) {
+          Class<?> c = classMapper.get(entry.getKey());
+          if (null == c) {
+            c = Class.forName(entry.getKey());
+          }
+          paramTypes[i] = c;
+          params[i] = gson.fromJson(entry.getValue().toString(), c);
+          i++;
         }
-        paramTypes[i] = c;
-        params[i] = gson.fromJson(entry.getValue().toString(), c);
-        i++;
+        InvocationHandler handler = new InvocationHandler();
+        handler.setClassName(url[0]);
+        handler.setMethodName(url[1]);
+        handler.setParameterTypes(paramTypes);
+        handler.setParams(params);
+        result = ExchangeManager.getExchange().dispatch(handler);
+        result.setCode(200);
       }
-      InvocationHandler handler = new InvocationHandler();
-      handler.setClassName(url[0]);
-      handler.setMethodName(url[1]);
-      handler.setParameterTypes(paramTypes);
-      handler.setParams(params);
-      Result result = ExchangeManager.getExchange().dispatch(handler);
-      result.setCode(200);
 //      result.setMsg("");
       byte[] bs = gson.toJson(result).getBytes(StandardCharsets.UTF_8);
       exchange.getResponseHeaders().set("Content-Type", "application/json");

@@ -38,6 +38,10 @@ public abstract class AbstractExporter<T> implements Exporter<T> {
     return this.target;
   }
 
+  public void setTarget(Object target) {
+    this.target = (T) target;
+  }
+
   public Class<T> getType() {
     return type;
   }

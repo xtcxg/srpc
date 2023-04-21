@@ -7,4 +7,6 @@ public interface Exporter<T> {
     Result invoke(InvocationHandler handler);
 
     T getTarget();
+
+    void setTarget(Object target);
 }

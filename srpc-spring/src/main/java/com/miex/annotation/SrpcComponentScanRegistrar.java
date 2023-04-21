@@ -31,11 +31,8 @@ public class SrpcComponentScanRegistrar implements ImportBeanDefinitionRegistrar
     ProtocolManager protocolManager = ProtocolManager.getInstance();
 
     protocolManager.createAllApply();
-    Map<String, Object> allApply = protocolManager.getAllApply();
+    Map<Class<?>, Object> allApply = protocolManager.getAllApply();
     registryInvokers(registry, allApply);
-
-//        Map<Class<?>, Object> allProvide = protocolManager.getAllProvide();
-//        registryProvide(registry, allProvide);
 
     registryRootBean(registry, ProtocolBeanPostProcessor.class);
   }
@@ -71,14 +68,14 @@ public class SrpcComponentScanRegistrar implements ImportBeanDefinitionRegistrar
     }
   }
 
-  private void registryInvokers(BeanDefinitionRegistry registry, Map<String, Object> invokers) {
-    for (Map.Entry<String, Object> entry : invokers.entrySet()) {
-      Class<?> c = entry.getValue().getClass();
+  private void registryInvokers(BeanDefinitionRegistry registry, Map<Class<?>, Object> invokers) {
+    for (Map.Entry<Class<?>, Object> entry : invokers.entrySet()) {
+      Class<?> c = entry.getKey();
       BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(c);
       AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
       beanDefinition.setBeanClass(ApplyFactoryBean.class);
       beanDefinition.getConstructorArgumentValues().addGenericArgumentValue(entry.getValue());
-      registry.registerBeanDefinition(entry.getKey(), beanDefinition);
+      registry.registerBeanDefinition(ClassUtil.getShortName(c), beanDefinition);
     }
   }
 
