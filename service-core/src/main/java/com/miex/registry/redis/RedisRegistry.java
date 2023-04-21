@@ -81,7 +81,6 @@ public class RedisRegistry implements Registry {
         // 本地数据
         LOCAL_SERVICE = ProtocolManager.getInstance().getLocalKeys().stream().map(Class::getName)
             .collect(Collectors.toList());
-        keepAlive();
         jedisPool.getResource().hset(REGISTRY_CONFIG.getHostIndexName(),
             this.address, LOCAL_SERVICE.toString());
         refresh();
@@ -92,6 +91,7 @@ public class RedisRegistry implements Registry {
         Map<String, List<String>> mergeService = merge(LOCAL_SERVICE, REGISTRY_INFO, this.address);
         push(mergeService);
         unlock();
+        keepAlive();
     }
 
     /**
@@ -247,14 +247,15 @@ public class RedisRegistry implements Registry {
     }
 
     private void keepAlive() {
+        Jedis jedis = jedisPool.getResource();
         CompletableFuture.supplyAsync(() -> {
             long time = REGISTRY_CONFIG.getTtl();
             while (ALIVE) {
                 try {
-                    log.info("redis registry heart beat:" + address);
-                    Jedis jedis = jedisPool.getResource();
+                    log.debug("redis registry heart beat:" + address);
                     jedis.setex(address, time, LOCAL_SERVICE.toString());
-                    jedisPool.returnResource(jedis);                    Thread.sleep(10000);
+//                    jedisPool.returnResource(jedis);
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

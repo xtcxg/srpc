@@ -14,12 +14,12 @@ public class SrpcSpringApplicationConfig {
     private Registry registry;
     private Exchange exchange;
 
-    @PostConstruct
-    public void init() {
-        this.exchange = ExchangeManager.getExchange();
-        this.exchange.init();
-
-        this.registry = RegistryManager.getRegistry();
-        this.registry.register();
-    }
+//    @PostConstruct
+//    public void init() {
+//        this.exchange = ExchangeManager.getExchange();
+//        this.exchange.init();
+//
+//        this.registry = RegistryManager.getRegistry();
+//        this.registry.register();
+//    }
 }

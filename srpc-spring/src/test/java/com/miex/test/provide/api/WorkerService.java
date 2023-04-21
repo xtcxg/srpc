@@ -3,7 +3,6 @@ package com.miex.test.provide.api;
 import com.miex.annotation.Provide;
 
 @Provide
-public interface ShopService {
+public interface WorkerService {
 
-    String buy(Long id);
 }

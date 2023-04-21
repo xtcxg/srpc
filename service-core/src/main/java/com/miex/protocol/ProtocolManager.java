@@ -6,6 +6,7 @@ import com.miex.util.Scanner;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class ProtocolManager {
 
   private static String PROTOCOL = "java";
   /* 存储需要创建 invoker 的接口名 */
-  private static final List<String> APPLY_CLASS = new ArrayList<>();
+  private static final List<Class<?>> APPLY_CLASS = new ArrayList<>();
   /* 存储使用 @Apply 的类 */
   private static final Set<String> APPLY_CACHE = new HashSet<>();
   /* className : proxyObject */
@@ -42,8 +43,13 @@ public class ProtocolManager {
     return protocolManager;
   }
 
-  public void addApply(String className) {
-    APPLY_CLASS.add(className);
+  public void addApply(Class<?> c) {
+    if (!APPLY_CLASS.contains(c))
+      APPLY_CLASS.add(c);
+  }
+
+  public List<Class<?>> getAllApplyClass() {
+    return APPLY_CLASS;
   }
 
 
@@ -75,8 +81,8 @@ public class ProtocolManager {
   }
 
   public void createAllApply() {
-    for (String className : APPLY_CLASS) {
-      createApply(className);
+    for (Class<?> c : APPLY_CLASS) {
+      createApply(c);
     }
   }
 
@@ -169,6 +175,15 @@ public class ProtocolManager {
       throw new SrpcException(SrpcException.Enum.EXPORTER_ERROR,
           "can't create exporter,class [" + type.getName() + "]");
     }
+  }
+
+  public Map<Class<?>, Object> getAllProvide() {
+    createAllExporter();
+    Map<Class<?>, Object> provideMap = new HashMap<>();
+    EXPORTER_MAP.forEach((k, v) -> {
+      provideMap.put(k, v.getTarget());
+    });
+    return provideMap;
   }
 
   public void addProviderClass(String name, Class<?> c) {

@@ -16,6 +16,18 @@ public class ApplicationConfig {
   private final ExchangeManager exchangeManager;
   private final RegistryManager registryManager;
 
+  public ApplicationConfig() {
+    this.protocolManager = ProtocolManager.getInstance();
+
+    this.exchangeManager = ExchangeManager.getInstance();
+
+    this.registryManager = RegistryManager.getInstance();
+
+    init();
+
+    System.err.println("SRPC start complete");
+  }
+
   public ApplicationConfig(Properties properties) {
     this(properties, null);
   }

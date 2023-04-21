@@ -212,7 +212,7 @@ public class Scanner {
     Field[] fields = c.getDeclaredFields();
     for (Field field : fields) {
       if (field.getAnnotation(Apply.class) != null) {
-        protocolManager.addApply(field.getType().getName());
+        protocolManager.addApply(field.getType());
         mark = true;
       }
     }

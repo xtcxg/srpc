@@ -17,8 +17,8 @@ public class UserServiceImpl implements UserService {
 
     @PostConstruct
     private void init(){
-        System.out.println("user service init");
-        System.out.println(shopService.buy(1L));
+//        System.out.println("user service init");
+//        System.out.println(shopService.buy(1L));
     }
 
     @Override

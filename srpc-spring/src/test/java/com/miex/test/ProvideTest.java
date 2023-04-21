@@ -5,14 +5,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.PropertySource;
 
 @SpringBootApplication
 @ComponentScan("com.miex.test.provide")
 @EnableSrpc(basePackages = "com.miex.test.provide")
-public class ScanTest {
+public class ProvideTest {
 
     public static void main(String[] args) {
-        ConfigurableApplicationContext config = SpringApplication.run(ScanTest.class);
+        ConfigurableApplicationContext config = SpringApplication.run(ProvideTest.class);
     }
 }

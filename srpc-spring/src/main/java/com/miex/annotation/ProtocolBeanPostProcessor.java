@@ -15,11 +15,10 @@ public class ProtocolBeanPostProcessor implements BeanPostProcessor {
     private final Map<String, Object> applyMap = ProtocolManager.getInstance().getAllApply();
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        Class<?> c = classCache.get(beanName);
-        if (null != c) {
-            // todo
-//            ProtocolManager.getInstance().getExporter(beanName, bean.getClass());
-        }
+//        Class<?> c = classCache.get(beanName);
+//        if (null != c) {
+//            ProtocolManager.getInstance().getExporter(bean.getClass());
+//        }
         String className = bean.getClass().getName();
         if (applyCache.contains(className)) {
             setValue(bean);
