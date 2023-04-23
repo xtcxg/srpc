@@ -15,10 +15,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-@Slf4j
 public class TryBestLoadBalance implements LoadBalance {
+
+  private final Log log = LogFactory.getLog(TryBestLoadBalance.class);
 
   private final Map<String, Long> count = new HashMap<>();
 

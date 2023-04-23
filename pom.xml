@@ -17,8 +17,8 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <srpc-version>1.0-SNAPSHOT</srpc-version>
-        <service-core-version>1.0-SNAPSHOT</service-core-version>
+        <srpc-version>1.2.x</srpc-version>
+        <service-core-version>1.2.1-SNAPSHOT</service-core-version>
     </properties>
 
     <dependencies>
@@ -40,11 +40,11 @@
             <artifactId>netty-all</artifactId>
             <version>4.1.65.Final</version>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.16</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.projectlombok</groupId>-->
+<!--            <artifactId>lombok</artifactId>-->
+<!--            <version>1.18.16</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>

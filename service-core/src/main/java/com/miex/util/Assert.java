@@ -1,14 +1,15 @@
 package com.miex.util;
 
 import com.miex.exception.SrpcException;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author liutz
  * @since 2022/3/8
  */
-@Slf4j
 public class Assert {
+	private final static Log log = LogFactory.getLog(Assert.class);
 
 	public static void NotNull(Object obj,String info) {
 		if (null == obj) {
