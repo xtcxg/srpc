@@ -208,6 +208,9 @@ public class RedisRegistry implements Registry {
     }
 
     private void push(Map<String, List<String>> serviceInfo) {
+        if (CollectionUtil.isEmpty(serviceInfo.keySet())) {
+            return;
+        }
         Jedis jedis = jedisPool.getResource();
         if (!lock(5000L)) {
             log.error("can't acquire lock to use registry");
@@ -257,7 +260,7 @@ public class RedisRegistry implements Registry {
 //                    jedisPool.returnResource(jedis);
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error("keepAlive error", e);
                 }
             }
             return null;
