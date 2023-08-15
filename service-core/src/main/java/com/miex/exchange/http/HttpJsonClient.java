@@ -4,6 +4,7 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import com.miex.exception.SrpcException;
 import com.miex.exception.SrpcException.Enum;
 import com.miex.exchange.Client;
@@ -28,8 +29,8 @@ public class HttpJsonClient implements Client {
   String host;
   int port;
   String address;
-  Gson gson = new GsonBuilder().setExclusionStrategies(new ExclusionStrategy[]{
-      new ExclusionStrategy() {
+  Gson gson = new GsonBuilder()
+      .setExclusionStrategies(new ExclusionStrategy() {
         @Override
         public boolean shouldSkipField(FieldAttributes fieldAttributes) {
           return fieldAttributes.getName().equals("throwable");
@@ -39,8 +40,10 @@ public class HttpJsonClient implements Client {
         public boolean shouldSkipClass(Class<?> aClass) {
           return false;
         }
-      }
-  }).create();
+      })
+      .setNumberToNumberStrategy(ToNumberPolicy.LAZILY_PARSED_NUMBER)
+      .setObjectToNumberStrategy(ToNumberPolicy.LAZILY_PARSED_NUMBER)
+      .create();
 
 
   public HttpJsonClient(String host, int port) {

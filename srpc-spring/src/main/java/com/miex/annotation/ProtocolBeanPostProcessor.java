@@ -20,14 +20,25 @@ public class ProtocolBeanPostProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
         Class<?> bc = bean.getClass();
+//        providerMap.forEach((i, c) -> {
+//            if (c.equals(bc)) {
+//                setEv(i, bean);
+//            }
+//        });
+        if (applyCache.contains(bc.getName())) {
+            setValue(bean);
+        }
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        Class<?> bc = bean.getClass();
         providerMap.forEach((i, c) -> {
             if (c.equals(bc)) {
                 setEv(i, bean);
             }
         });
-        if (applyCache.contains(bc.getName())) {
-            setValue(bean);
-        }
         return bean;
     }
 

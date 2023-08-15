@@ -12,13 +12,13 @@ import javax.annotation.PostConstruct;
 public class UserServiceImpl implements UserService {
 
     @Apply
-    @Autowired
+//    @Autowired
     ShopService shopService;
 
     @PostConstruct
     private void init(){
 //        System.out.println("user service init");
-//        System.out.println(shopService.buy(1L));
+        System.out.println(shopService.buy(1L));
     }
 
     @Override

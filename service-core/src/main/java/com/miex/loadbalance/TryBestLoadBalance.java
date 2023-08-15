@@ -46,13 +46,18 @@ public class TryBestLoadBalance implements LoadBalance {
           size = 0L;
         }
         count.put(serverName, size + 1);
-        for (int i = 0; i < count.size(); i++) {
-          try {
-            Client c = clients.get((int)(size % (clients.size() - 1)));
-            return c.send(handler);
-          } catch (Exception e) {
-            size++;
-            log.error("send request error, server:" + serverName, e);
+        if (clients.size() == 1) {
+          Client c = clients.get(0);
+          return c.send(handler);
+        } else {
+          for (int i = 0; i < count.size(); i++) {
+            try {
+              Client c = clients.get((int)(size % (clients.size() - 1)));
+              return c.send(handler);
+            } catch (Exception e) {
+              size++;
+              log.error("send request error, server:" + serverName, e);
+            }
           }
         }
         return null;
