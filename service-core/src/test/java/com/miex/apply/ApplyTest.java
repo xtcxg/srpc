@@ -1,4 +1,4 @@
-package com.miex.test;
+package com.miex.apply;
 
 import com.miex.config.ApplicationConfig;
 import com.miex.protocol.ProtocolManager;
@@ -30,11 +30,13 @@ public class ApplyTest {
     }
 
     @Test
-    public void create() {
+    public void create() throws InterruptedException {
         ProtocolManager protocolManager = config.getProtocolManager();
 
         ProductService productService = protocolManager.getApply(ProductService.class);
         String name = productService.getName(2L);
         System.out.println(name);
+
+        Thread.sleep(9999999);
     }
 }

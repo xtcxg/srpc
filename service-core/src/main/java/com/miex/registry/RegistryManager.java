@@ -2,12 +2,13 @@ package com.miex.registry;
 
 import com.miex.cache.PropertiesCache;
 import com.miex.config.RegistryConfig;
+import com.miex.exchange.ExchangeManager;
 import com.miex.util.ClassUtil;
 
 public class RegistryManager {
     private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
     private static final RegistryConfig registryConfig;
-    private static RegistryManager registryManager;
+    private static final RegistryManager registryManager = new RegistryManager();;
     private static Registry registry;
 
     static {
@@ -23,13 +24,9 @@ public class RegistryManager {
     }
 
     private RegistryManager() {
-
     }
 
     public static RegistryManager getInstance() {
-        if (null == registryManager) {
-            registryManager = new RegistryManager();
-        }
         return registryManager;
     }
 
@@ -49,7 +46,11 @@ public class RegistryManager {
         return registry;
     }
 
+    /**
+     * 注册服务到注册中心，并同步数据
+     */
     public void register() {
         getRegistry().register();
+        ExchangeManager.getInstance().syncServer(registry.getServices());
     }
 }

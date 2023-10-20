@@ -36,14 +36,17 @@ public class RedisRegistry implements Registry {
 
     private static ConcurrentHashMap<String, List<String>> REGISTRY_INFO = new ConcurrentHashMap<>();
 
+    private static final RegistryConfig REGISTRY_CONFIG = RegistryManager.getRegistryConfig();
+    private static final ExchangeConfig SERVER_CONFIG = ExchangeManager.getExchangeConfig();
+
     // 需要保持心跳，时间设置为无限
     private static final Executor pool = new ThreadPoolExecutor(8, 8, Integer.MAX_VALUE, TimeUnit.DAYS, new LinkedBlockingQueue<>());
 
-    // 对外提供的服务
+    // 当前服务对外提供的接口
     private static List<String> LOCAL_SERVICE;
 
-    private static final RegistryConfig REGISTRY_CONFIG = RegistryManager.getRegistryConfig();
-    private static final ExchangeConfig SERVER_CONFIG = ExchangeManager.getExchangeConfig();
+    // 注册中心所有的服务
+    private static final ConcurrentHashMap<String, List<String>> REGISTRY_SERVICE = new ConcurrentHashMap<>();
 
     // 服务状态
     private static Boolean ALIVE = true;
@@ -78,11 +81,13 @@ public class RedisRegistry implements Registry {
 
     @Override
     public void register() {
+        Jedis jedis = jedisPool.getResource();
         // 本地数据
         LOCAL_SERVICE = ProtocolManager.getInstance().getLocalKeys().stream().map(Class::getName)
             .collect(Collectors.toList());
-        jedisPool.getResource().hset(REGISTRY_CONFIG.getHostIndexName(),
-            this.address, LOCAL_SERVICE.toString());
+        jedis.hset(REGISTRY_CONFIG.getHostIndexName(), this.address, LOCAL_SERVICE.toString());
+        jedis.setex(address, REGISTRY_CONFIG.getTtl(), LOCAL_SERVICE.toString());
+        jedisPool.returnResource(jedis);
         refresh();
         lock();
         // 注册中心数据
@@ -103,7 +108,8 @@ public class RedisRegistry implements Registry {
         long start = System.currentTimeMillis();
         lock();
         Set<String> members = jedis.hkeys(REGISTRY_CONFIG.getHostIndexName());
-        Map<String, List<String>> registryService = new HashMap<>();
+//        Map<String, List<String>> registryService = new HashMap<>();
+        REGISTRY_SERVICE.clear();
         for (String member : members) {
             if (StringUtil.isEmpty(jedis.get(member))) {
                 // 清除下线的服务
@@ -111,12 +117,12 @@ public class RedisRegistry implements Registry {
             } else {
                 String serverInfo = jedis.hget(REGISTRY_CONFIG.getHostIndexName(), member);
                 List<String> targetService = CollectionUtil.toList(serverInfo);
-                merge(targetService, registryService, member);
+                merge(targetService, REGISTRY_SERVICE, member);
             }
         }
         jedis.del(REGISTRY_CONFIG.getServerIndexName());
-        push(registryService);
-        ExchangeManager.getInstance().syncServer(registryService);
+        push(REGISTRY_SERVICE);
+        ExchangeManager.getInstance().syncServer(REGISTRY_SERVICE);
         unlock();
         log.debug("refresh used " + (System.currentTimeMillis() - start) + "ms");
     }
@@ -185,22 +191,22 @@ public class RedisRegistry implements Registry {
         if (names.length == 0) {
             return new ConcurrentHashMap<>();
         }
-        ConcurrentHashMap<String, List<String>> serviceMap = new ConcurrentHashMap<>();
         if (names[0].equals("*")) {
+            REGISTRY_SERVICE.clear();
             jedis.hgetAll(REGISTRY_CONFIG.getServerIndexName());
             Map<String, String> all = jedis.hgetAll(REGISTRY_CONFIG.getServerIndexName());
             for (int i = 0; i < LOCAL_SERVICE.size(); i++) {
                 List<String> list = CollectionUtil.toList(all.get(LOCAL_SERVICE.get(i)));
-                serviceMap.put(LOCAL_SERVICE.get(i), list);
+                REGISTRY_SERVICE.put(LOCAL_SERVICE.get(i), list);
             }
-            return serviceMap;
+            return REGISTRY_SERVICE;
         }
-        List<String> hosts = jedis.hmget(REGISTRY_CONFIG.getServerIndexName(), names); // todo 应该是按顺序返回，未确定
+        List<String> hosts = jedis.hmget(REGISTRY_CONFIG.getServerIndexName(), names);
         for (int i = 0; i < names.length; i++) {
-            serviceMap.put(names[i], CollectionUtil.toList(hosts.get(i)));
+            REGISTRY_SERVICE.put(names[i], CollectionUtil.toList(hosts.get(i)));
         }
         jedisPool.returnResource(jedis);
-        return serviceMap;
+        return REGISTRY_SERVICE;
     }
 
     public ConcurrentHashMap<String, List<String>> pull() {
@@ -221,21 +227,21 @@ public class RedisRegistry implements Registry {
             List<String> delField = new ArrayList<>();
             Map<String, String> updateField = new HashMap<>();
             for (Map.Entry<String, List<String>> entry : serviceInfo.entrySet()) {
-                if (entry.getValue() == null || entry.getValue().size() == 0) {
+                if (entry.getValue() == null || entry.getValue().isEmpty()) {
                     delField.add(entry.getKey());
                 } else {
                     updateField.put(entry.getKey(), entry.getValue().toString());
                 }
             }
-            if (delField.size() > 0) {
+            if (!delField.isEmpty()) {
                 multi.hdel(REGISTRY_CONFIG.getServerIndexName(), delField.toArray(new String[0]));
             }
-            if (updateField.size() > 0) {
+            if (!updateField.isEmpty()) {
                 multi.hmset(REGISTRY_CONFIG.getServerIndexName(), updateField);
             }
             multi.exec();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("push service info error", e);
             multi.discard();
         }
         unlock();
@@ -352,5 +358,10 @@ public class RedisRegistry implements Registry {
         }
         REGISTRY_INFO.put(className, latest.get(className));
         return latest.get(className);
+    }
+
+    @Override
+    public ConcurrentHashMap<String, List<String>> getServices() {
+        return REGISTRY_SERVICE;
     }
 }

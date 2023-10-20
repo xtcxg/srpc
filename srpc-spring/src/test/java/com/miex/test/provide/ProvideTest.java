@@ -1,4 +1,4 @@
-package com.miex.test;
+package com.miex.test.provide;
 
 import com.miex.annotation.EnableSrpc;
 import org.springframework.boot.SpringApplication;
@@ -7,7 +7,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan("com.miex.test.provide")
 @EnableSrpc(basePackages = "com.miex.test.provide")
 public class ProvideTest {
 

@@ -3,6 +3,7 @@ package com.miex.registry.none;
 import com.miex.registry.Registry;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NoneRegistry implements Registry {
 
@@ -38,6 +39,11 @@ public class NoneRegistry implements Registry {
 
   @Override
   public List<String> getHosts(String className) {
+    return null;
+  }
+
+  @Override
+  public ConcurrentHashMap<String, List<String>> getServices() {
     return null;
   }
 }

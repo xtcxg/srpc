@@ -1,4 +1,4 @@
-package com.miex.test;
+package com.miex.provide;
 
 import com.miex.cache.PropertiesCache;
 import com.miex.config.ApplicationConfig;

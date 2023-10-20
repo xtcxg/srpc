@@ -1,4 +1,4 @@
-package com.miex.test;
+package com.miex.test.apply;
 
 import com.miex.annotation.EnableSrpc;
 import org.springframework.boot.SpringApplication;
@@ -8,14 +8,13 @@ import org.springframework.context.annotation.ComponentScan;
 import java.util.Properties;
 
 @SpringBootApplication
-@ComponentScan("com.miex.test.apply")
 @EnableSrpc(basePackages = "com.miex.test.apply")
 public class ApplyTest {
     public static void main(String[] args) {
         SpringApplication.run(ApplyTest.class);
 
 
-//        Properties properties = new Properties();
+//
 //        properties.setProperty("srpc.port","3696");
 //
 //        properties.setProperty("srpc.scan","com.miex.apply");

@@ -2,6 +2,7 @@ package com.miex.registry;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 注册中心
@@ -34,11 +35,17 @@ public interface Registry {
     void clean();
 
     /**
-     * 获取注册中心中的数据
+     * 获取注册中心中的接口数据,并刷新本地数据
      *
      * @return 注册中心的数据
      */
     Map<String, List<String>> pull(String[] names);
+
+    /**
+     * 获取本地接口数据
+     * @return
+     */
+    ConcurrentHashMap<String, List<String>> getServices();
 
     /**
      * 注销
@@ -52,5 +59,6 @@ public interface Registry {
      * @return
      */
     List<String> getHosts(String className);
+
 
 }

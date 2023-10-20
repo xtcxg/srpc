@@ -1,4 +1,4 @@
-package com.miex.test.provide.impl;
+package com.miex.test.provide.service;
 
 import com.miex.test.provide.api.WorkerService;
 import org.springframework.stereotype.Component;
