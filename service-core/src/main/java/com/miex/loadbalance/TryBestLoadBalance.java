@@ -15,10 +15,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-@Slf4j
 public class TryBestLoadBalance implements LoadBalance {
+
+  private final Log log = LogFactory.getLog(TryBestLoadBalance.class);
 
   private final Map<String, Long> count = new HashMap<>();
 
@@ -44,13 +46,18 @@ public class TryBestLoadBalance implements LoadBalance {
           size = 0L;
         }
         count.put(serverName, size + 1);
-        for (int i = 0; i < count.size(); i++) {
-          try {
-            Client c = clients.get((int)(size % (clients.size() - 1)));
-            return c.send(handler);
-          } catch (Exception e) {
-            size++;
-            log.error("send request error, server:" + serverName, e);
+        if (clients.size() == 1) {
+          Client c = clients.get(0);
+          return c.send(handler);
+        } else {
+          for (int i = 0; i < count.size(); i++) {
+            try {
+              Client c = clients.get((int)(size % (clients.size() - 1)));
+              return c.send(handler);
+            } catch (Exception e) {
+              size++;
+              log.error("send request error, server:" + serverName, e);
+            }
           }
         }
         return null;

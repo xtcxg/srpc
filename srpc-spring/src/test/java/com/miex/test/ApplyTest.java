@@ -14,6 +14,7 @@ public class ApplyTest {
     public static void main(String[] args) {
         SpringApplication.run(ApplyTest.class);
 
+
 //        Properties properties = new Properties();
 //        properties.setProperty("srpc.port","3696");
 //

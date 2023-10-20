@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ProtocolManager {
 
-  private static String PROTOCOL = "java";
+//  private static String PROTOCOL = "java";
   /* 存储需要创建 invoker 的接口名 */
   private static final List<Class<?>> APPLY_CLASS = new ArrayList<>();
   /* 存储使用 @Apply 的类 */

@@ -1,24 +1,25 @@
 package com.miex.exception;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * @author liutz
  * @since 2022/3/8
  */
-@Slf4j
 public class SrpcException extends RuntimeException{
-	@Getter
 	private Integer code;
-	@Getter
 	private String msg;
 
 	public SrpcException(){
 		super(Enum.SYSTEM_ERROR.getMsg());
 		this.code = Enum.SYSTEM_ERROR.getCode();
 		this.msg = Enum.SYSTEM_ERROR.getMsg();
+	}
+
+	public Integer getCode() {
+		return code;
+	}
+
+	public String getMsg() {
+		return msg;
 	}
 
 	public SrpcException(Integer code,String msg) {
@@ -70,10 +71,16 @@ public class SrpcException extends RuntimeException{
 		SEND_REQUEST_ERROR(50005,"send request error"),
 		NO_SERVER_AVAILABLE(50006, "no server available"),
 		;
-		@Getter
 		private final Integer code;
-		@Getter
 		private final String msg;
+
+		public Integer getCode() {
+			return code;
+		}
+
+		public String getMsg() {
+			return msg;
+		}
 
 		Enum(Integer code, String msg) {
 			this.code = code;
