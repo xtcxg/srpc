@@ -16,8 +16,8 @@ import javax.annotation.Resource;
 @Component
 public class ShopService {
     @Apply
-    @Resource
-    @Autowired
+//    @Resource
+//    @Autowired
     FruitService fruitService;
 
     @PostConstruct

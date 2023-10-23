@@ -25,7 +25,7 @@ public class ApplicationConfig {
 
     init();
 
-    System.err.println("SRPC start complete");
+    System.err.println("SRPC start complete, port:" + propertiesCache.get("srpc.exchange.port"));
   }
 
   public ApplicationConfig(Properties properties) {

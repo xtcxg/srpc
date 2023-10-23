@@ -34,7 +34,7 @@ public class DispatchHandler implements HttpHandler {
       exchange.sendResponseHeaders(200, bs.length);
       exchange.getResponseBody().write(bs);
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+      log.error("dispatch error", e);
     } catch (SrpcException e) {
       Result result = new Result();
       result.setException(e);
